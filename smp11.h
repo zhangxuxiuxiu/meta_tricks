@@ -39,7 +39,7 @@ namespace smp{
 		struct is_state_fn_defined{
 			template<unsigned M>
 			static constexpr bool test(...){ return false;} 
-			template<unsigned M, int = (state_func(std::declval<reader<M>>()),0)>
+			template<unsigned M, int = sizeof(state_func(reader<M>{}))>
 			static constexpr bool test(int) {return true;}
 
 			static constexpr bool value = test<N>(0);
@@ -54,9 +54,10 @@ namespace smp{
 		>
 		[[nodiscard]]
 		static consteval auto get_state() {
-			constexpr bool counted_past_n = is_state_fn_defined<N>::value;/*requires(reader<N> r) {
-				state_func(r);
-			};*/
+			constexpr bool counted_past_n = is_state_fn_defined<N>::value;
+//			constexpr bool counted_past_n = requires(reader<N> r) {
+//				state_func(r);
+//			};
 
 			if constexpr (counted_past_n) {
 				return get_state<EvalTag, N + 1>();
