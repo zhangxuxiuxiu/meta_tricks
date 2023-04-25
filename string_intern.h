@@ -1,5 +1,6 @@
 #pragma once
 
+//http://alexpolt.github.io/intern.html
 //https://github.com/alexpolt/luple/blob/master/intern.h
 
 #define N3599
