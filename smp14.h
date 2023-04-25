@@ -1,7 +1,6 @@
 #pragma once
 
 #include <type_traits>
-#include <concepts>
 
 namespace smp{
 
@@ -36,33 +35,45 @@ namespace smp{
 			static constexpr state_t<N, State> state{};
 		};
 
+		// add EvalTag here to trigger each invocation rather than cached value
+	//	template<class EvalTag, unsigned N>
+	//	struct is_state_fn_defined{
+	//		template<unsigned M>
+	//		static constexpr bool test(float){return false;} 
+	//		template<unsigned M, int= sizeof(state_func(reader<M>{}))>
+	//		static constexpr bool test(int) {return true;}
+
+	//		static constexpr bool value = test<N>(0);
+	//	};
+
 		// 2: Current State 
 		template<
-			auto EvalTag,
+			class EvalTag,
 			unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			auto Trigger = sizeof(setter<0, InitialState>)
+			int Trigger = sizeof(setter<0, InitialState>) + sizeof(state_func(reader<N>{}))
 		>
-		[[nodiscard]]
-		static consteval auto get_state() {
-			constexpr bool counted_past_n = requires(reader<N> r) {
-				state_func(r);
-			};
+		static constexpr auto get_state(int) {
+			return get_state<EvalTag, N + 1>(1);
+		}
 
-			if constexpr (counted_past_n) {
-				return get_state<EvalTag, N + 1>();
-			} else {
-				constexpr reader<N - 1> r;
-				return state_t<N - 1, decltype(state_func(r))>{};
-			}
+		template<
+			class EvalTag,
+			unsigned N = 0,
+			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
+			int Trigger = sizeof(setter<0, InitialState>)
+		>
+		static constexpr auto get_state(float) {
+			return state_t<N - 1, decltype(state_func(reader<N-1>{}))>{};
 		}
 
 
 		template<
-			auto EvalTag = []{},
-			auto State = get_state<EvalTag>()
+			class EvalTag,
+			class State = decltype(get_state<EvalTag>(1))
 		>
-		using Current = typename std::remove_cvref_t<decltype(State)>::state;
+		//using Current = typename std::remove_cvref_t<State>::state;
+		using Current = typename State::state;
 
 		// 3: Transform to Next State
 		template<class CurState, 
@@ -81,21 +92,19 @@ namespace smp{
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			auto EvalTag
+			class EvalTag
 		>
-		[[nodiscard]]
-		static consteval auto transform_impl() {
-			using cur_state_t = decltype(get_state<EvalTag>());            // E9.1
+		static constexpr auto transform_impl() {
+			using cur_state_t = decltype(get_state<EvalTag>(1));            // E9.1
 			using cur_state = typename cur_state_t::state;
 			using next_state = typename unpack_transform<cur_state, Trans, Args>::type;      // E9.2
-			setter<cur_state_t::n + 1, next_state> s;                        // E9.3
-			return s.state;                                                     // E9.4
+			return setter<cur_state_t::n + 1, next_state>{}.state;                        // E9.3
 		}
 
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			auto EvalTag //= []{}
+			class EvalTag 
 		>
 		using Transform =  decltype(transform_impl<Trans, Args, EvalTag>());
 
@@ -155,10 +164,10 @@ namespace list{
 		using base = smp::DAG<Tag, InitialState>;
 
 		template<class Args, 
-			 auto EvalTag= []{}>
+			 class EvalTag>
 		using Append = typename base::Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
 
-		template<auto EvalTag = []{}>
+		template<class EvalTag>
 		using Pop = typename base::Transform<type_list_pop, type_list<>, EvalTag>;
 	};
 
@@ -182,7 +191,7 @@ namespace counter{
 	struct Counter: smp::DAG<Tag, Index<N>>{ 
 		using base = smp::DAG<Tag, Index<N>>;
 
-		template<auto EvalTag= []{}>
+		template<class EvalTag>
 		using Next = typename base::Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }

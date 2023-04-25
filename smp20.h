@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <concepts>
 
 namespace smp{
 
@@ -35,11 +36,12 @@ namespace smp{
 			static constexpr state_t<N, State> state{};
 		};
 
-		template<unsigned N>
+		// add EvalTag here to trigger each invocation rather than cached value
+		template<auto EvalTag, unsigned N>
 		struct is_state_fn_defined{
 			template<unsigned M>
-			static constexpr bool test(...){ return false;} 
-			template<unsigned M, int = sizeof(state_func(reader<M>{}))>
+			static constexpr bool test(float){return false;} 
+			template<unsigned M, int= sizeof(state_func(reader<M>{}))>
 			static constexpr bool test(int) {return true;}
 
 			static constexpr bool value = test<N>(0);
@@ -52,12 +54,12 @@ namespace smp{
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
 			auto Trigger = sizeof(setter<0, InitialState>)
 		>
-		[[nodiscard]]
-		static consteval auto get_state() {
-			constexpr bool counted_past_n = is_state_fn_defined<N>::value;
-//			constexpr bool counted_past_n = requires(reader<N> r) {
-//				state_func(r);
-//			};
+//		[[nodiscard]]
+		static constexpr auto get_state() {
+			//return is_state_fn_defined<EvalTag, N>::value ? get_state<EvalTag, N + 1>() : state_t<N - 1, decltype(state_func(reader<N-1>{}))>{};
+			constexpr bool counted_past_n = requires(reader<N> r) {
+				state_func(r);
+			};
 
 			if constexpr (counted_past_n) {
 				return get_state<EvalTag, N + 1>();

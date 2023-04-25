@@ -1,4 +1,4 @@
-#include "smp11.h"
+#include "smp20.h"
 #include "string_intern.h"
 
 #include <iostream>
@@ -24,6 +24,7 @@ namespace counter{
 int main(){
 	{
 		using dag = list::MetaList<Tag0, list::type_list<char>>;
+		static_assert(std::same_as<dag::Current<>, list::type_list<char>>);
 		dag::Pop<>();
 		static_assert(std::same_as<dag::Current<>, list::type_list<>>);
 	}
