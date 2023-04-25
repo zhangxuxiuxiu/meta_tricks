@@ -5,11 +5,6 @@
 
 #define N3599
 
-#ifdef __clang__
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template" 
-#endif
-
 namespace intern {
 
   template<char... NN> struct string {
@@ -64,5 +59,3 @@ namespace intern {
   #define $( s ) intern::string< $c(s,0),$c(s,1),$c(s,2),$c(s,3),$c(s,4),$c(s,5),$c(s,6),$c(s,7),$c(s,8),$c(s,9),$c(s,10) >
 
 #endif
-
-#define Uniquer2(F,N) Uniquer2<$(F)::value,N>

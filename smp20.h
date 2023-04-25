@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <concepts>
 
-#ifdef __clang__
+#ifdef __clang__ //clang++ defines both __clang__ and __GNUC__
 
 #elif defined( __GNUC__ )
 # pragma GCC diagnostic push

@@ -12,6 +12,7 @@ template<const char*, int>
 struct Uniquer2{};
 
 #define Uq2 Uniquer2(__FILE__,__COUNTER__)
+#define Uniquer2(F,N) ($(F)::value,__COUNTER__)
 
 int main(){
 	std::cout  << typeid(Uq).name() << '\n' ;
