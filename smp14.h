@@ -2,6 +2,13 @@
 
 #include <type_traits>
 
+#ifdef __clang__
+
+#elif defined( __GNUC__ )
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wnon-template-friend" 
+#endif
+
 namespace smp{
 
 	template<class Tag, class InitialState>
@@ -165,10 +172,10 @@ namespace list{
 
 		template<class Args, 
 			 class EvalTag>
-		using Append = typename base::Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
+		using Append = typename base::template Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
 
 		template<class EvalTag>
-		using Pop = typename base::Transform<type_list_pop, type_list<>, EvalTag>;
+		using Pop = typename base::template Transform<type_list_pop, type_list<>, EvalTag>;
 	};
 
 }
@@ -192,7 +199,10 @@ namespace counter{
 		using base = smp::DAG<Tag, Index<N>>;
 
 		template<class EvalTag>
-		using Next = typename base::Transform<next, list::type_list<>, EvalTag>::state;
+		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }
 
+#ifdef __GNUC__
+# pragma __GNUC__ diagnostic pop 
+#endif

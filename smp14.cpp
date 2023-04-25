@@ -14,6 +14,11 @@ struct Tag8{};
 #define Current2(dag) dag::Current<Uq>()
 #define Next2(dag) dag::Next<Uq>()
 
+#ifdef __clang__
+# pragma clang diagnostic push 
+# pragma clang diagnostic ignored "-Wc++17-extensions"
+#endif
+
 int main(){
 	// test different explicit MetaList tags and macro Pop&Append tags
 	{
@@ -95,3 +100,7 @@ int main(){
 	}
 
 }
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif

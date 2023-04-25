@@ -5,6 +5,11 @@
 
 #define N3599
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template" 
+#endif
+
 namespace intern {
 
   template<char... NN> struct string {
@@ -34,10 +39,19 @@ namespace intern {
 
 #if !defined( _MSC_VER ) && defined( N3599 )
 
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template" 
+#endif
+
   template<typename T, T... C>
   auto operator ""_intern() {
     return intern::string<C..., T{}>{};
   }
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif 
 
   #define $( s )  decltype( s ## _intern )
 
