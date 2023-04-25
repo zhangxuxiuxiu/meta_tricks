@@ -50,14 +50,4 @@ namespace intern {
 
 #endif
 
-template<class, int>
-struct Uniquer{};
-
-#define Uq Uniquer(__FILE__,__LINE__)
-#define Uniquer(F,N) Uniquer<$(F),N>
-
-template<const char*, int>
-struct Uniquer2{};
-
-#define Uq2 Uniquer2(__FILE__,__LINE__)
 #define Uniquer2(F,N) Uniquer2<$(F)::value,N>

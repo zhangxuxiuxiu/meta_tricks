@@ -162,7 +162,7 @@ namespace list{
 //		static_assert(false, "type_list_pop must have at least one element");
 //	};
 
-	template<class Tag, class InitialState = type_list<>>
+	template<class Tag = decltype([]{}), class InitialState = type_list<>>
 	struct MetaList : smp::DAG<Tag, InitialState>{ 
 		using base = smp::DAG<Tag, InitialState>;
 
@@ -190,7 +190,7 @@ namespace counter{
 		using type = Index<N+1>;
 	};
 
-	template<class Tag, size_t N=0>
+	template<class Tag = decltype([]{}), size_t N=0>
 	struct Counter: smp::DAG<Tag, Index<N>>{ 
 		using base = smp::DAG<Tag, Index<N>>;
 
