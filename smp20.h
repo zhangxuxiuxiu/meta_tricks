@@ -3,7 +3,9 @@
 #include <type_traits>
 #include <concepts>
 
-#ifdef __GNUC__
+#ifdef __clang__
+
+#elif defined( __GNUC__ )
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wnon-template-friend" 
 #endif
@@ -192,6 +194,9 @@ namespace counter{
 	};
 }
 
-#ifdef __GNUC__
+
+#ifdef __clang__
+
+#elif defined( __GNUC__ )
 # pragma GCC diagnostic pop
 #endif
