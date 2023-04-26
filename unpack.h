@@ -122,7 +122,6 @@ namespace unpack{
 
 #elif __cplusplus >= 201402L
 
-		// TRY ONE: enable if and SFINE on return type
 //		template<class Seq>
 //		struct is_constructible{
 //			template<size_t... Js>
@@ -134,6 +133,8 @@ namespace unpack{
 //
 //			static constexpr bool value = test(Seq{}, 0);
 //		};
+
+		// TRY ONE: enable if on parameter type 
 //
 //		template<class Seq, class PrevSeq=typename index_pop<Seq>::type>
 //		static constexpr auto as_tuple(typename std::enable_if<!is_constructible<Seq>::value, int>::type = 1) { 
@@ -147,51 +148,52 @@ namespace unpack{
 //
 //		using type = decltype(as_tuple<std::index_sequence<>>());
 
-//		// TRY TWO: overload function & SFINE on parameter type 
-//		template<size_t... Is>
-//		static constexpr auto as_tuple(float){ 
-//			return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
+		// TRY TWO: enable_if  on default template type
+//		template<class Seq, class PrevSeq=typename index_pop<Seq>::type>
+//		static constexpr auto as_tuple(float) { 
+//			return as_tuple_help(PrevSeq{});
 //		}
-//
-//		template<size_t... Is>
-//		static constexpr auto as_tuple( decltype( T{ type_detector<Is>{}...}, 0) ) {
-//			return as_tuple<Is..., sizeof...(Is)>(0);
+//	
+//		template<class Seq, class NextSeq=typename index_push<Seq>::type, class=typename std::enable_if<is_constructible<Seq>::value>::type >
+//		static constexpr auto as_tuple(int){ 
+//			return as_tuple<NextSeq>(0);
 //		}
+//	
+//		using type = decltype(as_tuple<std::index_sequence<>>(0));
 //
-//		using type = decltype(as_tuple<>(0));
 
-		//TRY THREE : overload function, SFINE on return type and default template parameter using sizeof
-		template<class Seq>
+		// TRY THREE: overload function & SFINE on parameter type 
+		template<size_t... Is>
 		static constexpr auto as_tuple(float){ 
-			return as_tuple_help(typename index_pop<Seq>::type{});
+			return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
 		}
 
-		template<size_t... Is> // fail without decltype(T{ type_detector<Is>{}...})
-		static constexpr auto construct(std::index_sequence<Is...>) -> decltype(T{ type_detector<Is>{}...}){
-			return T{ type_detector<Is>{}...};
+		template<size_t... Is>
+		static constexpr auto as_tuple( decltype( T{ type_detector<Is>{}...}, 0) ) {
+			return as_tuple<Is..., sizeof...(Is)>(0);
 		}
 
-		template<class Seq, class = decltype(construct(Seq{}))>
-		static constexpr auto as_tuple(int) { 
-			return as_tuple<typename index_push<Seq>::type>(0);
-		}
+		using type = decltype(as_tuple<>(0));
 
-		using type = decltype(as_tuple<std::index_sequence<>>(0));
-
-
-//		// TRY FOUR: specialize type and SFINE on return type
+		//TRY FOUR: overload function, SFINE on return type and default template parameter using sizeof
 //		template<class Seq>
-//		struct is_constructible{
-//			template<size_t... Js>
-//			static constexpr auto test(std::index_sequence<Js...>, float){return false;} 
-//			template<size_t... Js>
-//			static constexpr auto test(std::index_sequence<Js...>, int) -> decltype(T{ type_detector<Js>{}...}, true) {
-//				return true;
-//			}
+//		static constexpr auto as_tuple(float){ 
+//			return as_tuple_help(typename index_pop<Seq>::type{});
+//		}
 //
-//			static constexpr bool value = test(Seq{}, 0);
-//		};
+//		template<size_t... Is> // fail without decltype(T{ type_detector<Is>{}...})
+//		static constexpr auto construct(std::index_sequence<Is...>) -> decltype(T{ type_detector<Is>{}...}){
+//			return T{ type_detector<Is>{}...};
+//		}
 //
+//		template<class Seq, class = decltype(construct(Seq{}))>
+//		static constexpr auto as_tuple(int) { 
+//			return as_tuple<typename index_push<Seq>::type>(0);
+//		}
+//
+//		using type = decltype(as_tuple<std::index_sequence<>>(0));
+
+		// TRY FIVE: specialize type
 //		template<class Seq, bool = is_constructible<Seq>::value >
 //		struct tuple_expand{
 //			using type = typename tuple_expand< typename index_push<Seq>::type >::type;	
@@ -203,6 +205,7 @@ namespace unpack{
 //		};
 //
 //		using type = typename tuple_expand<std::index_sequence<>>::type;
+
 
 #else 
 #	error __cplusplus must be at least 201402L
