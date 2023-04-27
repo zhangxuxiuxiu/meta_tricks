@@ -12,7 +12,7 @@
 namespace smp{
 
 	template<class Tag, class InitialState>
-	struct DAG{
+	struct Msm{
 
 		// 1: preparations 
 		template<unsigned N, typename State>
@@ -41,17 +41,6 @@ namespace smp{
 
 			static constexpr state_t<N, State> state{};
 		};
-
-		// add EvalTag here to trigger each invocation rather than cached value
-	//	template<class EvalTag, unsigned N>
-	//	struct is_state_fn_defined{
-	//		template<unsigned M>
-	//		static constexpr bool test(float){return false;} 
-	//		template<unsigned M, int= sizeof(state_func(reader<M>{}))>
-	//		static constexpr bool test(int) {return true;}
-
-	//		static constexpr bool value = test<N>(0);
-	//	};
 
 		// 2: Current State 
 		template<
@@ -167,8 +156,8 @@ namespace list{
 //	};
 
 	template<class Tag, class InitialState = type_list<>>
-	struct MetaList : smp::DAG<Tag, InitialState>{ 
-		using base = smp::DAG<Tag, InitialState>;
+	struct MetaList : smp::Msm<Tag, InitialState>{ 
+		using base = smp::Msm<Tag, InitialState>;
 
 		template<class Args, 
 			 class EvalTag>
@@ -195,8 +184,8 @@ namespace counter{
 	};
 
 	template<class Tag, size_t N=0>
-	struct Counter: smp::DAG<Tag, Index<N>>{ 
-		using base = smp::DAG<Tag, Index<N>>;
+	struct Counter: smp::Msm<Tag, Index<N>>{ 
+		using base = smp::Msm<Tag, Index<N>>;
 
 		template<class EvalTag>
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;

@@ -13,7 +13,7 @@
 namespace smp{
 
 	template<class Tag, class InitialState>
-	struct DAG{
+	struct Msm{
 
 		// 1: preparations 
 		template<unsigned N, typename State>
@@ -158,8 +158,8 @@ namespace list{
 //	};
 
 	template<class Tag = decltype([]{}), class InitialState = type_list<>>
-	struct MetaList : smp::DAG<Tag, InitialState>{ 
-		using base = smp::DAG<Tag, InitialState>;
+	struct MetaList : smp::Msm<Tag, InitialState>{ 
+		using base = smp::Msm<Tag, InitialState>;
 
 		template<class Args, 
 			 auto EvalTag= []{}>
@@ -186,8 +186,8 @@ namespace counter{
 	};
 
 	template<class Tag = decltype([]{}), size_t N=0>
-	struct Counter: smp::DAG<Tag, Index<N>>{ 
-		using base = smp::DAG<Tag, Index<N>>;
+	struct Counter: smp::Msm<Tag, Index<N>>{ 
+		using base = smp::Msm<Tag, Index<N>>;
 
 		template<auto EvalTag= []{}>
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
