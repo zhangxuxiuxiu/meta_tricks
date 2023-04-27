@@ -74,6 +74,15 @@ namespace unpack{
 		    }; 
 		};
 
+		template<class Seq, class = T>
+		struct is_constructible : std::false_type {};
+
+		template<size_t... Is>
+		struct is_constructible<std::index_sequence<Is...>, decltype(T{ type_detector<Is>{}...})> : std::true_type {};
+
+		//template<size_t... Is>
+		//inline constexpr bool is_constructible_v =typename is_constructible<std::index_sequence<Is...>>::value;
+
 		// deduct tuple type
 
 		template<size_t... Is>
@@ -98,20 +107,8 @@ namespace unpack{
 #elif __cplusplus >= 201703L
 
 		template<size_t... Is>
-		struct is_constructible{
-			template<size_t... Js>
-			static constexpr auto test(float){return false;} 
-			template<size_t... Js>
-			static constexpr auto test(int) -> decltype(T{ type_detector<Js>{}...}, true) {
-				return true;
-			}
-
-			static constexpr bool value = test<Is...>(0);
-		};
-
-		template<size_t... Is>
 		static constexpr auto as_tuple() {
-			if constexpr (is_constructible<Is...>::value){ 
+			if constexpr (is_constructible<std::index_sequence<Is...>>::value){ 
 				return as_tuple<Is..., sizeof...(Is)>();
 			} else {
 				return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
@@ -121,18 +118,6 @@ namespace unpack{
 		using type = decltype(as_tuple<>());
 
 #elif __cplusplus >= 201402L
-
-//		template<class Seq>
-//		struct is_constructible{
-//			template<size_t... Js>
-//			static constexpr auto test(std::index_sequence<Js...>, float){return false;} 
-//			template<size_t... Js>
-//			static constexpr auto test(std::index_sequence<Js...>, int) -> decltype(T{ type_detector<Js>{}...}, true) {
-//				return true;
-//			}
-//
-//			static constexpr bool value = test(Seq{}, 0);
-//		};
 
 		// TRY ONE: enable if on parameter type 
 //
@@ -202,6 +187,19 @@ namespace unpack{
 //		template<size_t... Is>
 //		struct tuple_expand<std::index_sequence<Is...>, false>{
 //			using type =  decltype(as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{}));
+//		};
+//
+//		using type = typename tuple_expand<std::index_sequence<>>::type;
+//
+		// TRY SIX: specialize type with default template parameter 
+//		template<class Seq, class = T>
+//		struct tuple_expand{
+//			using type =  decltype(as_tuple_help(typename index_pop<Seq>::type{}));
+//		};
+//
+//		template<size_t... Is>
+//		struct tuple_expand<std::index_sequence<Is...>, decltype(T{ type_detector<Is>{}...})>{
+//			using type = typename tuple_expand<std::index_sequence<Is..., sizeof...(Is)> >::type;	
 //		};
 //
 //		using type = typename tuple_expand<std::index_sequence<>>::type;
