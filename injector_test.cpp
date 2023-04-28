@@ -6,13 +6,13 @@
 #endif
 
 int main(){
-	static_assert(!injector::HasState<char, UniqueType>::value);
+	static_assert(!injector::HasState<char, UniqueTag>::value);
 	static_assert(injector::Inject<char,double>::value);
 	static_assert(std::is_same< injector::StateOf<char>, double>::value);
 	static_assert(!std::is_same< injector::StateOf<char>, float>::value);
 	static_assert(injector::Inject<char,double>::value);
 	static_assert(!injector::Inject<char,float>::value);
-	static_assert(injector::HasState<char, UniqueType>::value);
+	static_assert(injector::HasState<char, UniqueTag>::value);
 
 #if __cplusplus >= 202002L
 	static_assert(!injector::HasState<int>::value);

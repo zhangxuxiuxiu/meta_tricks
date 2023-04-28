@@ -1,13 +1,14 @@
+//inspired by https://mc-deltat.github.io/articles/stateful-metaprogramming-cpp20
+
 #pragma once
 
 #include <type_traits>
 
 #include "injector.h"
 
-
 namespace smp{
 
-	template<class Tag, class InitialState>
+	template<DeclareUniqueTag(Tag), class InitialState = void>
 	struct Msm{
 		// 1: preparations 
 		template<unsigned N>
@@ -62,13 +63,14 @@ namespace smp{
 			}
 		}
 
-	#endif
 
+	#endif
 		template<
-			class DeclareUniqueType(EvalTag),
-			class State = decltype(get_state<EvalTag>(0))
+			DeclareUniqueTag(EvalTag),
+			class State = decltype(get_state<UseTag(EvalTag)>(0))
 		>
 		using Current = typename State::state;
+
 
 		// 3: Transform to Next State
 		template<class CurState, 
@@ -99,9 +101,9 @@ namespace smp{
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			class EvalTag 
+			DeclareUniqueTag(EvalTag)
 		>
-		using Transform =  decltype(transform_impl<Trans, Args, EvalTag>());
+		using Transform =  decltype(transform_impl<Trans, Args, UseTag(EvalTag)>());
 
 	};
 
@@ -156,15 +158,15 @@ namespace list{
 //	};
 
 
-	template<class DeclareUniqueType(Tag), class InitialState = type_list<>>
+	template<DeclareUniqueTag(Tag), class InitialState = type_list<>>
 	struct MetaList : smp::Msm<Tag, InitialState>{ 
 		using base = smp::Msm<Tag, InitialState>;
 
 		template<class Args, 
-			 class DeclareUniqueType(EvalTag)>
+			 DeclareUniqueTag(EvalTag)>
 		using Append = typename base::template Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
 
-		template<class DeclareUniqueType(EvalTag)>
+		template<DeclareUniqueTag(EvalTag)>
 		using Pop = typename base::template Transform<type_list_pop, type_list<>, EvalTag>;
 	};
 
@@ -184,11 +186,11 @@ namespace counter{
 		using type = Index<N+1>;
 	};
 
-	template<class DeclareUniqueType(Tag), size_t N=0>
+	template<DeclareUniqueTag(Tag), size_t N=0>
 	struct Counter: smp::Msm<Tag, Index<N>>{ 
 		using base = smp::Msm<Tag, Index<N>>;
 
-		template<class DeclareUniqueType(EvalTag)>
+		template<DeclareUniqueTag(EvalTag)>
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }
