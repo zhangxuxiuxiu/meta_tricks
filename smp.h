@@ -4,11 +4,11 @@
 
 #include "injector.h"
 
+
 namespace smp{
 
 	template<class Tag, class InitialState>
 	struct Msm{
-
 		// 1: preparations 
 		template<unsigned N>
 		struct step{};
@@ -19,32 +19,56 @@ namespace smp{
 			using state = State;
 		};
 
+	#if __cplusplus < 202002L
 		// 2: Current State 
 		template<
-			auto EvalTag,
+			class EvalTag,
+			unsigned N = 0,
+			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
+			int Trigger = sizeof(typename injector::Inject<step<0>, state_t<0,InitialState>>::type) + sizeof(injector::StateOf<step<N>>) 
+		>
+		static constexpr auto get_state(int) {
+			return get_state<EvalTag, N + 1>(1);
+		}
+
+		template<
+			class EvalTag,
+			unsigned N = 0,
+			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
+			int Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
+		>
+		static constexpr auto get_state(float) {
+			return injector::StateOf< step<N-1> >{};
+		}
+
+	#else
+		// 2: Current State 
+		template<
+			class EvalTag,
 			unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
 			auto Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
 		>
 		[[nodiscard]]
-		static constexpr auto get_state() {
+		static constexpr auto get_state(int ) {
 			constexpr bool counted_past_n = requires {
 				injector::StateOf<step<N>>{};
 			};
 
 			if constexpr (counted_past_n) {
-				return get_state<EvalTag, N + 1>();
+				return get_state<EvalTag, N + 1>(0);
 			} else {
 				return injector::StateOf< step<N-1> >{};
 			}
 		}
 
+	#endif
 
 		template<
-			auto EvalTag = []{},
-			auto State = get_state<EvalTag>()
+			class DeclareUniqueType(EvalTag),
+			class State = decltype(get_state<EvalTag>(0))
 		>
-		using Current = typename std::remove_cvref_t<decltype(State)>::state;
+		using Current = typename State::state;
 
 		// 3: Transform to Next State
 		template<class CurState, 
@@ -63,11 +87,10 @@ namespace smp{
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			auto EvalTag
+			class EvalTag
 		>
-		[[nodiscard]]
-		static consteval auto transform_impl() {
-			using cur_state_t = decltype(get_state<EvalTag>());            // E9.1
+		static constexpr auto transform_impl() {
+			using cur_state_t = decltype(get_state<EvalTag>(0));
 			using cur_state = typename cur_state_t::state;
 			using next_state = typename unpack_transform<cur_state, Trans, Args>::type;      // E9.2
 			return typename injector::Inject< step<cur_state_t::n + 1>, state_t<cur_state_t::n+1, next_state> >::type{};                        // E9.3
@@ -76,13 +99,14 @@ namespace smp{
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			auto EvalTag 
+			class EvalTag 
 		>
 		using Transform =  decltype(transform_impl<Trans, Args, EvalTag>());
 
 	};
 
 } // end of smp
+
 
 namespace list{
 
@@ -131,15 +155,16 @@ namespace list{
 //		static_assert(false, "type_list_pop must have at least one element");
 //	};
 
-	template<class Tag = decltype([]{}), class InitialState = type_list<>>
+
+	template<class DeclareUniqueType(Tag), class InitialState = type_list<>>
 	struct MetaList : smp::Msm<Tag, InitialState>{ 
 		using base = smp::Msm<Tag, InitialState>;
 
 		template<class Args, 
-			 auto EvalTag= []{}>
+			 class DeclareUniqueType(EvalTag)>
 		using Append = typename base::template Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
 
-		template<auto EvalTag = []{}>
+		template<class DeclareUniqueType(EvalTag)>
 		using Pop = typename base::template Transform<type_list_pop, type_list<>, EvalTag>;
 	};
 
@@ -159,11 +184,11 @@ namespace counter{
 		using type = Index<N+1>;
 	};
 
-	template<class Tag = decltype([]{}), size_t N=0>
+	template<class DeclareUniqueType(Tag), size_t N=0>
 	struct Counter: smp::Msm<Tag, Index<N>>{ 
 		using base = smp::Msm<Tag, Index<N>>;
 
-		template<auto EvalTag= []{}>
+		template<class DeclareUniqueType(EvalTag)>
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }

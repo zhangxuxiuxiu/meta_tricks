@@ -7,6 +7,14 @@
 # pragma GCC diagnostic ignored "-Wnon-template-friend" 
 #endif
 
+#if __cplusplus >=202002L
+	#define DeclareUniqueType(Tag)  Tag = decltype([]{})
+	#define UniqueType decltype([]{})
+#else
+	#define DeclareUniqueType(Tag)  Tag 
+	#define UniqueType std::integral_constant<int, __COUNTER__> 
+#endif
+
 namespace injector{
 
 	template<class Key> 
@@ -26,13 +34,24 @@ namespace injector{
 		}
 	};
 
-	template<class Key, class State, class=bool>
+	template<class Key, class State, class = bool>
 	struct Inject : std::integral_constant<bool, sizeof(state_injector<Key,State>) == 1>{
 		using type = State;
 	};
 
 	template<class Key, class State >
-	struct Inject<Key, State, decltype(state_fn(state_key<Key>{}), false)> : std::false_type{}; 
+	struct Inject<Key, State, decltype(state_fn(state_key<Key>{}), true)> : std::false_type{}; 
+
+	// no use "bool=false" to avoid error that type of specialized non-type template argument depends on a template parameter of the partial specialization 
+	template<class Key, class EvalTag, class = bool>
+	struct has_state : std::false_type{};
+
+	template<class Key, class EvalTag>
+	struct has_state<Key, EvalTag, decltype(state_fn(state_key<Key>{}), false)> : std::true_type{}; 
+
+	// indirect to avoid error that default template arguments may not be used in partial specializations
+	template<class Key, class DeclareUniqueType(EvalTag)>
+	using HasState = has_state<Key, EvalTag>;
 
 	template<class Key>
 	using StateOf = typename decltype(state_fn(state_key<Key>{}))::type;
