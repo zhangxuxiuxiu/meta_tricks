@@ -2,44 +2,20 @@
 
 #include <type_traits>
 
-#ifdef __clang__ //clang++ defines both __clang__ and __GNUC__
-
-#elif defined( __GNUC__ )
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wnon-template-friend" 
-#endif
+#include "injector.h"
 
 namespace smp{
 
 	template<class Tag, class InitialState>
 	struct Msm{
-
 		// 1: preparations 
+		template<unsigned N>
+		struct step{};
+
 		template<unsigned N, typename State>
 		struct state_t {
 			static constexpr unsigned n = N;
 			using state = State;
-		};
-
-		template<
-			unsigned N
-		>
-		struct reader {
-			friend auto state_func(reader<N>);
-		};
-
-
-		template<
-			unsigned N,
-			typename State
-		>
-		struct setter {
-		 // E5
-			friend auto state_func(reader<N>) {
-				return State{};
-			}
-
-			static constexpr state_t<N, State> state{};
 		};
 
 		// 2: Current State 
@@ -47,7 +23,7 @@ namespace smp{
 			class EvalTag,
 			unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			int Trigger = sizeof(setter<0, InitialState>) + sizeof(state_func(reader<N>{}))
+			int Trigger = sizeof(typename injector::Inject<step<0>, state_t<0,InitialState>>::type) + sizeof(injector::StateOf<step<N>>) 
 		>
 		static constexpr auto get_state(int) {
 			return get_state<EvalTag, N + 1>(1);
@@ -57,10 +33,10 @@ namespace smp{
 			class EvalTag,
 			unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			int Trigger = sizeof(setter<0, InitialState>)
+			int Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
 		>
 		static constexpr auto get_state(float) {
-			return state_t<N - 1, decltype(state_func(reader<N-1>{}))>{};
+			return injector::StateOf< step<N-1> >{};
 		}
 
 
@@ -68,7 +44,6 @@ namespace smp{
 			class EvalTag,
 			class State = decltype(get_state<EvalTag>(1))
 		>
-		//using Current = typename std::remove_cvref_t<State>::state;
 		using Current = typename State::state;
 
 		// 3: Transform to Next State
@@ -94,7 +69,7 @@ namespace smp{
 			using cur_state_t = decltype(get_state<EvalTag>(1));            // E9.1
 			using cur_state = typename cur_state_t::state;
 			using next_state = typename unpack_transform<cur_state, Trans, Args>::type;      // E9.2
-			return setter<cur_state_t::n + 1, next_state>{}.state;                        // E9.3
+			return typename injector::Inject< step<cur_state_t::n + 1>, state_t<cur_state_t::n+1, next_state> >::type{};                        // E9.3
 		}
 
 		template<
@@ -191,7 +166,3 @@ namespace counter{
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }
-
-#ifdef __GNUC__
-# pragma __GNUC__ diagnostic pop 
-#endif

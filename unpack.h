@@ -2,12 +2,7 @@
 
 #include <tuple>
 #include <type_traits>
-
-#ifdef __clang__
-#elif defined(__GNUC__)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wnon-template-friend" 
-#endif
+#include "friend_injector.h"
 
 namespace unpack{
 
@@ -54,21 +49,12 @@ namespace unpack{
 	template<class T>
 	struct TupleLike{
 
-		template<size_t N> 
-		struct field_id : std::integral_constant<size_t,N>{ 
-			constexpr friend auto field_type(field_id<N>);
-		};
-
-		template<size_t N, class U> 
-		struct	field_marker{ 
-			constexpr friend auto field_type(field_id<N>){
-				return U{};
-			}
-		};
+		template<size_t N>
+		struct field_id{};
 
 		template <size_t N>
 		struct type_detector {
-		    template<class U, std::size_t = sizeof(field_marker<N,U>)>
+		    template<class U, bool = injector::Inject<field_id<N>, U>::value>
 		    constexpr operator U() const&& noexcept{
 			return unsafe_declval<U>();
 		    }; 
@@ -87,7 +73,7 @@ namespace unpack{
 
 		template<size_t... Is>
 		static constexpr auto as_tuple_help(std::index_sequence<Is...>){
-			return std::tuple<decltype(field_type(field_id<Is>{}))... > {};
+			return std::tuple<injector::StateOf<field_id<Is>>... > {};
 		}
 
 #if __cplusplus >= 202002L
@@ -212,8 +198,3 @@ namespace unpack{
 	};
 
 }
-
-#ifdef __clang__
-#elif defined(__GNUC__)
-# pragma GCC diagnostic pop
-#endif 

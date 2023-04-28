@@ -1,14 +1,8 @@
 #pragma once
 
 #include <type_traits>
-#include <concepts>
 
-#ifdef __clang__ //clang++ defines both __clang__ and __GNUC__
-
-#elif defined( __GNUC__ )
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wnon-template-friend" 
-#endif
+#include "injector.h"
 
 namespace smp{
 
@@ -16,31 +10,13 @@ namespace smp{
 	struct Msm{
 
 		// 1: preparations 
+		template<unsigned N>
+		struct step{};
+
 		template<unsigned N, typename State>
 		struct state_t {
 			static constexpr unsigned n = N;
 			using state = State;
-		};
-
-		template<
-			unsigned N
-		>
-		struct reader {
-			friend auto state_func(reader<N>);
-		};
-
-
-		template<
-			unsigned N,
-			typename State
-		>
-		struct setter {
-		 // E5
-			friend auto state_func(reader<N>) {
-				return State{};
-			}
-
-			static constexpr state_t<N, State> state{};
 		};
 
 		// 2: Current State 
@@ -48,19 +24,18 @@ namespace smp{
 			auto EvalTag,
 			unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			auto Trigger = sizeof(setter<0, InitialState>)
+			auto Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
 		>
 		[[nodiscard]]
 		static constexpr auto get_state() {
-			constexpr bool counted_past_n = requires(reader<N> r) {
-				state_func(r);
+			constexpr bool counted_past_n = requires {
+				injector::StateOf<step<N>>{};
 			};
 
 			if constexpr (counted_past_n) {
 				return get_state<EvalTag, N + 1>();
 			} else {
-				constexpr reader<N - 1> r;
-				return state_t<N - 1, decltype(state_func(r))>{};
+				return injector::StateOf< step<N-1> >{};
 			}
 		}
 
@@ -95,14 +70,13 @@ namespace smp{
 			using cur_state_t = decltype(get_state<EvalTag>());            // E9.1
 			using cur_state = typename cur_state_t::state;
 			using next_state = typename unpack_transform<cur_state, Trans, Args>::type;      // E9.2
-			setter<cur_state_t::n + 1, next_state> s;                        // E9.3
-			return s.state;                                                     // E9.4
+			return typename injector::Inject< step<cur_state_t::n + 1>, state_t<cur_state_t::n+1, next_state> >::type{};                        // E9.3
 		}
 
 		template<
 			template<class, class... > class Trans,
 			class Args,
-			auto EvalTag //= []{}
+			auto EvalTag 
 		>
 		using Transform =  decltype(transform_impl<Trans, Args, EvalTag>());
 
@@ -193,10 +167,3 @@ namespace counter{
 		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
 	};
 }
-
-
-#ifdef __clang__
-
-#elif defined( __GNUC__ )
-# pragma GCC diagnostic pop
-#endif
