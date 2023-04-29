@@ -13,6 +13,8 @@ unpack: ./unpack.h ./unpack_test.cpp
 	clang++ -std=c++14 ./unpack_test.cpp -o upk  
 	clang++ -std=c++17 ./unpack_test.cpp -o upk 
 	clang++ -std=c++20 ./unpack_test.cpp -o upk 
+	g++-12 -std=c++20 ./private_access_test.cpp -o pa 
+	clang++ -std=c++20 ./private_access_test.cpp -o pa 
 
 smp: ./smp.h ./smp_test.cpp
 	g++-12 -std=c++14 ./smp_test.cpp -o sall
@@ -35,5 +37,6 @@ clean:
 	[[ ! -e ./upk ]] || rm ./upk
 	[[ ! -e ./sall ]] || rm ./sall
 	[[ ! -e ./sit ]] || rm ./sit
+	[[ ! -e ./pa ]] || rm ./pa
 
 all: injector unpack smp intern clean
