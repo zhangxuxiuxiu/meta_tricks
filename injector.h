@@ -31,7 +31,7 @@ namespace injector{
 	};
 
 	template<class Key, class State> 
-	struct	state_injector{ 
+	struct state_injector{ 
 		constexpr friend auto state_fn(state_key<Key>){
 			return state_value<State>{};
 		}
