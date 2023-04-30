@@ -10,21 +10,21 @@ class Private {
 };
 
 namespace unpack{ // required by clang that explicit instantiation must be in ns 
-	template struct AllFields<Access<&Private::data, &Private::data2>, Access<&Private::str>>;
+	template struct AllFields<Fields<&Private::data, &Private::data2>, Fields<&Private::str>>;
 }
 
 
 int main(){
 	Private obj;
 	auto int_ft = static_cast< injector::StateOf<int Private::*>*>(nullptr); 
-	auto&& data = Eval(obj, int_ft);	
+	auto&& data = FieldsEval(obj, int_ft);	
 	data = std::make_tuple(31,32); 
-	assert( data == Eval(obj, int_ft) );
+	assert( data == FieldsEval(obj, int_ft) );
 
 	auto char_ft = static_cast< injector::StateOf<char Private::*>*>(nullptr); 
-	auto&& str= Eval( obj, char_ft);
+	auto&& str= FieldsEval( obj, char_ft);
 	str = std::make_tuple('a'); 
-	assert( str == Eval(obj, char_ft) );
+	assert( str == FieldsEval(obj, char_ft) );
 
 	auto dup = unpack::Unpack(obj);
 	dup = std::make_tuple(12,23,'c');
