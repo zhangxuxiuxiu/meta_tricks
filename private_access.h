@@ -17,24 +17,58 @@ namespace unpack{
 	struct field_host<R T::*>{
 		using type = T; 
 	};
+
+	template<size_t Index, class FieldType>
+	struct IndexedFields{};
 	
-	template<auto... F>
-	struct Fields : std::index_sequence< sizeof( injector::Inject<
-				typename traits::nth_element<0, decltype(F)...>::type,
-				Fields<F...>
-			>) >{
+	template<size_t Index, auto... F>
+	struct FieldsImpl {
 		using field_type = typename traits::nth_element<0, decltype(F)...>::type;
 		using host_type = typename field_host<field_type>::type;
 	
-		friend auto FieldsEval(host_type& obj, Fields* ){
+		friend auto FieldsEval(host_type& obj, FieldsImpl* ){
 			return std::forward_as_tuple(obj.*F...); 
 		}
 	
 	};
 	
+	template<auto... Fs>
+	struct Fields{
+		using field_type = typename traits::nth_element<0, decltype(Fs)...>::type;
+		using host_type = typename field_host<field_type>::type;
+	}; // used to declare field access 
+
 	template<class T>
 	struct subs_host{
 		using type = typename T::host_type;
+	};
+
+	// concat type_list
+	template<class...>
+	struct type_list{};
+
+	template<class A, class B>
+	struct concat;
+
+	template<class... Ts, class... Us>
+	struct concat< type_list<Ts...>, type_list<Us...> >{
+		using type = type_list< Ts..., Us...  >;
+	};
+
+	// Index Subs: each Sub is a Fields
+	template<size_t N, class... Subs>
+	struct IndexFields;
+
+	template<size_t N>
+	struct IndexFields<N>{
+		using type = type_list<>; 
+	};
+
+	template<size_t N, auto... Fs,  class... Subs>
+	struct IndexFields< N, Fields<Fs...>, Subs... >{
+		using type = typename concat< type_list< FieldsImpl<N,Fs...> >, 
+			typename IndexFields< N+1, Subs... >::type
+		      >::type;
 	};
 	
 	template<class... FieldDefines>
@@ -45,8 +79,13 @@ namespace unpack{
 	
 		using host_type = typename traits::all_same< subs_host, FieldDefines... >::type; 
 	
+		template<class... Subs>
+		static auto unpack_host_impl(host_type& obj, type_list<Subs...>){
+			return std::tuple_cat( FieldsEval( obj, static_cast<Subs* >(nullptr) )... ); 
+		}
+
 		friend auto unpack_host(host_type& obj, AllFields* =nullptr){
-			return std::tuple_cat( FieldsEval( obj, static_cast< injector::StateOf< typename FieldDefines::field_type >* >(nullptr) )... ); 
+			return unpack_host_impl(obj, typename IndexFields<0, FieldDefines...>::type{} );
 		}
 	};
 	
@@ -55,6 +94,4 @@ namespace unpack{
 		return unpack_host(obj, p);
 	}
 
-//	template<class... FieldDefines>
-//	struct DefineFields : std::index_sequence< sizeof(FieldDefines)... >{};
 }
