@@ -5,30 +5,43 @@
 
 // access private members
 class Private {
-  int data, data2;
-  char str;
+	private:
+		int data, data2;
+		char str;
+
+		int sum() const{
+			return data + data2;
+		}
+
+		int minus(int base) const{
+			return base + data - data2;
+		}
 };
 
+struct TagSum{};
+struct TagMinus{};
+
 namespace unpack{ // required by clang that explicit instantiation must be in ns 
-	template struct AllFields<Fields<&Private::data>, Fields<&Private::str>, Fields<&Private::data2>>;
+#if __cplusplus >= 201703L
+	template struct Fields<&Private::data, &Private::str, &Private::data2>;
+	template struct Functor<TagSum, &Private::sum>;
+	template struct Functor<TagMinus, &Private::minus>;
+#else 
+	template struct Fields<SubF<int Private::*, &Private::data>, SubF<char Private::*, &Private::str>, SubF<int Private::*, &Private::data2>>;
+	template struct Functor<TagSum, int (Private::*)() const, &Private::sum>;
+	template struct Functor<TagMinus,int (Private::*)(int ) const, &Private::minus>;
+#endif
 }
 
 
 int main(){
 	Private obj;
-//	auto int_ft = static_cast< injector::StateOf<int Private::*>*>(nullptr); 
-//	auto&& data = FieldsEval(obj, int_ft);	
-//	data = std::make_tuple(31,32); 
-//	assert( data == FieldsEval(obj, int_ft) );
-//
-//	auto char_ft = static_cast< injector::StateOf<char Private::*>*>(nullptr); 
-//	auto&& str= FieldsEval( obj, char_ft);
-//	str = std::make_tuple('a'); 
-//	assert( str == FieldsEval(obj, char_ft) );
 
 	auto dup = unpack::Unpack(obj);
 	dup = std::make_tuple(12, 'c', 23);
 	assert( dup == unpack::Unpack(obj) );
 	std::cout << std::get<0>(dup) << '\t' << std::get<1>(dup) << '\t' << std::get<2>(dup) << '\n';
 
+	assert( 35 == unpack::TaggedFn<TagSum>(obj));
+	assert( -1 == unpack::TaggedFn<TagMinus>(obj, 10));
 }
