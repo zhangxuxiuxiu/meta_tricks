@@ -18,6 +18,14 @@ namespace traits{
 	template<class Ts>
 	using empty_of_t = typename empty_of<Ts>::type;
 
+	template<class Ts>
+	struct size_of;
+
+	using std::size_t;
+
+	template<template<class...> class List, class... Ts>
+	struct size_of<List<Ts...>> : std::integral_constant< size_t, sizeof...(Ts) >{};
+
 	template<class Ts, class Us>
 	struct type_list_concat;
 
@@ -47,24 +55,6 @@ namespace traits{
 		using type = typename type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >::type;
 	};
 
-	// nth_element
-	using std::size_t;
-
-	template<size_t N, class Ts>
-	struct nth_element;
-
-	template<class T, class... Us>
-	struct nth_element<0, type_list<T, Us...> >{
-		using type = T;
-	};
-
-	template<size_t N, class T, class... Us>
-	struct nth_element<N, type_list<T, Us...> >{
-		using type = typename nth_element< N-1, type_list<Us...> >::type;
-	};
-
-	template<size_t N, class... Ts>
-	using nth_element_t = typename nth_element< N, type_list<Ts...> >::type;
 
 
 	// transform_x
@@ -73,44 +63,55 @@ namespace traits{
 
 	template< class Trans, class State, template<class...> class List>
 	struct transform_x< Trans, State, List<> >{
-		using type = typename State::type;
+		// case 1: more search required at end of list
+		// case 2: no more search required at end of list
+		using type = typename std::enable_if< State::ok_eof, typename State::type >::type;
 	};
 	
 	template< class Trans, class State, template<class...> class List, class T, class... Us >
 	struct transform_x< Trans, State, List<T, Us...> >{
-		using next_state = typename Trans::template fn<State, T>::type;
-		using type = typename std::conditional< next_state::value,  typename transform_x< Trans, next_state, List<Us...> >::type, typename next_state::type >::type;
+		template<class S>
+		static constexpr auto impl(...){
+			return typename S::type{};
+		}
+
+		template<class S>
+		static constexpr auto impl(typename std::enable_if< S::value, int>::type){
+			return typename transform_x< Trans, typename Trans::template fn<S, T>::type, List<Us...> >::type{};
+		}
+
+		using type = decltype(impl<State>(0)); 
 	};
 
 	template< class Trans, class State, class... Ts>		
 	using transform_x_t = typename transform_x< Trans, State, type_list<Ts...> >::type;
 	
 	
-	template<class Base>
-	struct transform_x_base : std::true_type{
+	template<class Base, bool cont = true, bool OkEof = true>
+	struct transform_x_base : std::integral_constant<bool, cont>{
 		using type = Base;	
+		static constexpr bool ok_eof = OkEof;
 	};
 
 	// hof_trans to support chain multiple trans
-	template< class... Trans>
+	template< template<class> class... Trans>
 	struct hof_trans;
 
-	template<class Tran>
-	struct hof_trans<Tran>{
-		template<class State, class T>
+	template<>
+	struct hof_trans<>{
+		template<class T>
 		struct fn{
-			using type = typename Tran::template fn<State, T>::type;
+			using type = T; 
 		};
 	};
 
-	template<class Tran,  class... Urans>
+	template<template<class> class Tran,  template<class> class... Urans>
 	struct hof_trans<Tran, Urans...>{
-		template<class State, class T>
+		template<class T>
 		struct fn{
-			using next_state = typename Tran::template fn<State, T>::type;
-			using type = typename std::enable_if< next_state::value, typename hof_trans<Urans...>::template fn<next_state, T>::type  >::type;
+			using next_state = typename Tran<T>::type;
+			using type = typename hof_trans<Urans...>::template fn<next_state>::type;
 		};
-
 	};
 
 	// all_same
@@ -126,25 +127,24 @@ namespace traits{
 //	struct all_same< List<T, T, Us...> >{
 //		using type = typename all_same< List<T, Us...> >::type;
 //	};
-//
-//	template<class... Ts>
-//	using all_same_t = typename all_same< type_list<Ts...> >::type;
 
 	// all same
+	template<template<class> class... Trans>
 	struct all_same_trans {
 		template<class State, class T>
 		struct fn{
 			using next_state = struct X{ 
-				static constexpr bool value =  std::is_same<typename State::type, T>::value || std::is_void<typename State::type>::value;
-				using type = T;
+				using type = typename hof_trans<Trans...>::template fn<T>::type;
+				static constexpr bool value =  std::is_same<typename State::type, type>::value || std::is_void<typename State::type>::value;
+				static constexpr bool ok_eof = true;
 			};
 			// fail early
 			using type = typename std::enable_if< next_state::value, next_state>::type;
 		};
 	};
 
-	template<class Ts>
-	using all_same = transform_x< all_same_trans, transform_x_base<void>, Ts >;
+	template<class Ts, template<class> class... Trans>
+	using all_same = transform_x< all_same_trans<Trans...>, transform_x_base<void>, Ts >;
 
 	template<class... Ts>
 	using all_same_t = typename all_same< type_list<Ts...> >::type;
@@ -157,17 +157,15 @@ namespace traits{
 //	struct transform< Trans, List<Ts...> >{
 //		using type = List<typename Trans<Ts>::type...>;
 //	};
-//
-//	template< template<class> class Trans, class... Ts>		
-//	using transform_t = typename transform< Trans, type_list<Ts...> >::type;
 
 	// transform
-	template<template<class> class Trans>
+	template<template<class> class... Trans>
 	struct transform_trans{
 		template< class State, class T>
 		struct fn {
 			using type = struct X : std::true_type{
-				using type = typename type_list_append< typename State::type, typename Trans<T>::type >::type;	
+				using type = typename type_list_append< typename State::type, typename hof_trans<Trans...>::template fn<T>::type >::type;	
+				static constexpr bool ok_eof = true;
 			};
 		};
 	};
@@ -178,6 +176,74 @@ namespace traits{
 	template<template<class> class Trans, class... Ts>
 	using transform_t = typename transform< Trans, type_list<Ts...> >::type; 
 	
+	// nth_element
+
+//	template<size_t N, class Ts>
+//	struct nth_element;
+//
+//	template<class T, class... Us>
+//	struct nth_element<0, type_list<T, Us...> >{
+//		using type = T;
+//	};
+//
+//	template<size_t N, class T, class... Us>
+//	struct nth_element<N, type_list<T, Us...> >{
+//		using type = typename nth_element< N-1, type_list<Us...> >::type;
+//	};
+	
+	// nth_element
+
+	template<size_t N>
+	using Index = std::integral_constant<size_t, N>;
+
+	template<size_t N, template<class> class... Trans>
+	struct nth_element_trans{
+		template<class State, class T>
+		struct fn{
+			template<size_t M>	
+			static constexpr auto impl(Index<M>)  ->typename std::enable_if< (M<=N), Index<M+1> >::type  {
+				return Index<M+1>{}; 	
+			}
+
+			static constexpr auto impl(...) { 
+				return typename hof_trans<Trans...>::template fn<T>::type{};	
+			}
+
+			using type = struct X {
+				static constexpr bool value = !std::is_same< typename State::type, Index<N+1> >::value; 
+				using type = decltype( impl( typename State::type{} ) );
+				static constexpr bool ok_eof = false;
+			};
+		};
+
+	};
+	
+	template<size_t N, class Ts, template<class> class... Trans>
+	using nth_element = transform_x< nth_element_trans<N, Trans...>, transform_x_base<Index<0>, true, false>, Ts >;
+
+	template<size_t N, class... Ts>
+	using nth_element_t = typename nth_element< N, type_list<Ts...> >::type;
+
+	// index type list
+	template<size_t N, class T>
+	struct IndexedType{};
+
+	template<template<class> class... Trans>
+	struct index_trans{
+		template< class State, class T>
+		struct fn {
+			using type = struct X : std::true_type{
+				using type = typename type_list_append< typename State::type, IndexedType< size_of<typename State::type>::value, typename hof_trans<Trans...>::template fn<T>::type > >::type;	
+				static constexpr bool ok_eof = true;
+			};
+		};
+	};
+
+	template<class Ts, template<class> class... Trans>
+	using index_list = transform_x< index_trans<Trans...>, transform_x_base<type_list<>>, Ts >;
+
+	template<class... Ts>
+	using index_list_t = typename index_list< type_list<Ts...> >::type;
 
 	// identity
 	template<class T>

@@ -55,8 +55,7 @@ namespace unpack{
 
 	template<class... FieldDefines>
 	struct Fields {
-		using host_type = typename traits::all_same< traits::transform_t< subs_host, FieldDefines... > >::type; 
-//		using host_type = traits::transform_x_t< traits::hof_trans< traits::transform_trans<subs_host>, traits::all_same_trans >, traits::type_list<>, FieldDefines... >; 
+		using host_type = typename traits::all_same< traits::type_list<FieldDefines...>, subs_host >::type; 
 	
 		friend auto unpack_host(host_type& obj, Fields* ) 
 			-> decltype( sizeof(injector::Inject<host_type, Fields>), std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines*>(nullptr) )... ) ) {
