@@ -9,26 +9,12 @@
 #include "traits.h"
 
 namespace unpack{
-	
-	template<class FPtr>
-	struct member_host;
-	
-	template<class R, class T>
-	struct member_host<R T::*>{
-		using type = T; 
-	};
-
-	template<class R, class T, class... Args>
-	struct member_host<R T::*(Args...)>{
-		using type = T; 
-	};
 
 	// access private fields
 #if __cplusplus >= 201703L
 	template<auto... F>
 	struct Fields{
-		using field_type = traits::nth_element_t<0, decltype(F)...>;
-		using host_type = typename member_host<field_type>::type;
+		using host_type = typename traits::nth_element<0, traits::type_list<decltype(F)...>, traits::member_host>::type;
 	
 		friend auto unpack_host(host_type& obj, Fields* ) 
 			-> decltype( sizeof(injector::Inject<host_type, Fields>), std::forward_as_tuple(obj.*F...) ){
@@ -39,8 +25,7 @@ namespace unpack{
 #else
 	template<class T, T... F>
 	struct SubF {
-		using field_type = T;
-		using host_type = typename member_host<field_type>::type;
+		using host_type = typename traits::member_host<T>::type;
 	
 		friend auto FieldsEval(host_type& obj, SubF* ){
 			return std::forward_as_tuple(obj.*F...); 
@@ -79,8 +64,7 @@ namespace unpack{
 	struct Functor: std::index_sequence< sizeof( injector::Inject< Tag, Functor<Tag, F, Fptr> > ) >
 #endif 
 	{
-	
-		using host_type = typename member_host<decltype(Fptr)>::type; 
+		using host_type = typename traits::member_host<decltype(Fptr)>::type; 
 	
 		template<class... Args>
 		friend auto tag_fn(host_type& obj, Functor*, Args&&... args){
