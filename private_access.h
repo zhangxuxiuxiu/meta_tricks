@@ -27,7 +27,7 @@ namespace unpack{
 #if __cplusplus >= 201703L
 	template<auto... F>
 	struct Fields{
-		using field_type = typename traits::nth_element<0, decltype(F)...>::type;
+		using field_type = traits::nth_element_t<0, decltype(F)...>;
 		using host_type = typename member_host<field_type>::type;
 	
 		friend auto unpack_host(host_type& obj, Fields* ) 
@@ -55,7 +55,7 @@ namespace unpack{
 
 	template<class... FieldDefines>
 	struct Fields {
-		using host_type = typename traits::all_same< subs_host, FieldDefines... >::type; 
+		using host_type = typename traits::all_same< traits::transform_t< subs_host, FieldDefines... > >::type; 
 	
 		friend auto unpack_host(host_type& obj, Fields* ) 
 			-> decltype( sizeof(injector::Inject<host_type, Fields>), std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines*>(nullptr) )... ) ) {

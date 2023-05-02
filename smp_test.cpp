@@ -22,30 +22,30 @@ int main(){
 #if  __cplusplus < 202002L
 	// test different explicit MetaList tags and macro Pop&Append tags
 	{
-		using dag = list::MetaList<Tag0, list::type_list<char>>;
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<char>>::value);
+		using dag = list::MetaList<Tag0, traits::type_list<char>>;
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<char>>::value);
 		dag::Pop<UniqueTag>();
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<>>::value);
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<>>::value);
 	}
 
 	{
 
 		using dag = list::MetaList<Tag1>;
 
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<>>::value);  
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<>>::value);  
 		dag::Append<int,UniqueTag>();
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<int>>::value);
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<int>>::value);
 		dag::Append<float,UniqueTag>();
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<int, float>>::value);
-		dag::Append<list::type_list<float, double>,UniqueTag>();
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<int, float, float, double>>::value);
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<int, float>>::value);
+		dag::Append<traits::type_list<float, double>,UniqueTag>();
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<int, float, float, double>>::value);
 		dag::Pop<UniqueTag>();
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<int, float, float >>::value);
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<int, float, float >>::value);
 	}
 
 	{
-		using dag = list::MetaList<Tag2, list::type_list<char>>;
-		static_assert(std::is_same<dag::Current<UniqueTag>, list::type_list<char>>::value);    
+		using dag = list::MetaList<Tag2, traits::type_list<char>>;
+		static_assert(std::is_same<dag::Current<UniqueTag>, traits::type_list<char>>::value);    
 	}
 
 	
@@ -94,11 +94,11 @@ int main(){
 	{
 		using dag = list::MetaList<>;
 		dag::Append<char>();
-		static_assert(std::same_as<dag::Current<>, list::type_list<char>>);    
+		static_assert(std::same_as<dag::Current<>, traits::type_list<char>>);    
 		dag::Append<char>();
-		static_assert(std::same_as<dag::Current<>, list::type_list<char,char>>);    
+		static_assert(std::same_as<dag::Current<>, traits::type_list<char,char>>);    
 		dag::Pop<>();
-		static_assert(std::same_as<dag::Current<>, list::type_list<char>>);    
+		static_assert(std::same_as<dag::Current<>, traits::type_list<char>>);    
 	}
 	{
 		using dag = counter::Counter<>;
@@ -111,11 +111,11 @@ int main(){
 	{
 		using dag = list::MetaList<>;
 		dag::Append<char, UniqueTag>();
-		static_assert(std::same_as<dag::Current<>, list::type_list<char>>);    
+		static_assert(std::same_as<dag::Current<>, traits::type_list<char>>);    
 		dag::Append<char>();
-		static_assert(std::same_as<dag::Current<UniqueTag>, list::type_list<char,char>>);    
+		static_assert(std::same_as<dag::Current<UniqueTag>, traits::type_list<char,char>>);    
 		dag::Pop<>();
-		static_assert(std::same_as<dag::Current<>, list::type_list<char>>);    
+		static_assert(std::same_as<dag::Current<>, traits::type_list<char>>);    
 	}
 	{
 		using dag = counter::Counter<>;

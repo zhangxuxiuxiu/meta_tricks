@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "injector.h"
+#include "traits.h"
 
 namespace smp{
 
@@ -112,62 +113,27 @@ namespace smp{
 
 namespace list{
 
-	template<typename...>
-	struct type_list {};
-
-	template<class TypeList1, class Typelist2>
-	struct type_list_concat;
-
-	template<typename... Ts, typename... U>
-	struct type_list_concat<type_list<Ts...>, type_list<U...>> {
-		using type = type_list<Ts..., U...>;
-	};
-
-	template<class TypeList1, class... Args>
-	struct type_list_append{
-      		using type = typename type_list_concat<TypeList1, type_list<Args...>>::type;
-	};
 
 	template<class T>
 	struct to_list{
-		using type  = type_list<T>;
+		using type  = traits::type_list<T>;
 	};
 
 	template<class... Args>
-	struct to_list<type_list<Args...>>{
-		using type = type_list<Args...>;
+	struct to_list<traits::type_list<Args...>>{
+		using type = traits::type_list<Args...>;
 	};
 
-
-	template<class TypeList>
-	struct type_list_pop;
-
-	template<class T>
-	struct type_list_pop<type_list<T>>{
-		using type = type_list<>;
-	};
-
-	template<class U, class... Ts>
-	struct type_list_pop<type_list<U, Ts...>>{
-		using type = typename type_list_concat< type_list<U>, typename type_list_pop<type_list<Ts...>>::type >::type;
-	};
-
-//	template<>
-//	struct type_list_pop<type_list<>>{
-//		static_assert(false, "type_list_pop must have at least one element");
-//	};
-
-
-	template<DeclareUniqueTag(Tag), class InitialState = type_list<>>
+	template<DeclareUniqueTag(Tag), class InitialState = traits::type_list<>>
 	struct MetaList : smp::Msm<Tag, InitialState>{ 
 		using base = smp::Msm<Tag, InitialState>;
 
 		template<class Args, 
 			 DeclareUniqueTag(EvalTag)>
-		using Append = typename base::template Transform<type_list_append, typename to_list<Args>::type, EvalTag>;
+		using Append = typename base::template Transform<traits::type_list_append, typename to_list<Args>::type, EvalTag>;
 
 		template<DeclareUniqueTag(EvalTag)>
-		using Pop = typename base::template Transform<type_list_pop, type_list<>, EvalTag>;
+		using Pop = typename base::template Transform<traits::type_list_pop, traits::type_list<>, EvalTag>;
 	};
 
 }
@@ -191,6 +157,6 @@ namespace counter{
 		using base = smp::Msm<Tag, Index<N>>;
 
 		template<DeclareUniqueTag(EvalTag)>
-		using Next = typename base::template Transform<next, list::type_list<>, EvalTag>::state;
+		using Next = typename base::template Transform<next, traits::type_list<>, EvalTag>::state;
 	};
 }
