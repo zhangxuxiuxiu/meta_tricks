@@ -202,7 +202,7 @@ namespace traits{
 		template<class State, class T>
 		struct fn{
 			template<size_t M>	
-			static constexpr auto impl(Index<M>)  ->typename std::enable_if< (M<=N), std::pair<bool,Index<M+1>> >::type  {
+			static constexpr auto impl(typename std::enable_if< (M<=N), Index<M>>::type) {
 				return std::make_pair(true,Index<M+1>{}); 	
 			}
 
