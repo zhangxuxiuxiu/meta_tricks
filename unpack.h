@@ -1,41 +1,10 @@
 #pragma once
 
 #include <tuple>
-#include <type_traits>
+#include "traits.h"
 #include "injector.h"
 
 namespace unpack{
-
-	using std::size_t;
-
-	template<class, class>
-	struct index_concat;
-
-	template<size_t... Is, size_t... Js>
-	struct index_concat<std::index_sequence<Is...>, std::index_sequence<Js...>>{
-		using type = std::index_sequence<Is..., Js...>;
-	};
-
-	template<class Seq>
-	struct index_push;
-
-	template<size_t... Is>
-	struct index_push<std::index_sequence<Is...>>{
-		using type = std::index_sequence<Is..., sizeof...(Is)>;
-	};
-
-	template<class Seq>
-	struct index_pop;
-
-	template<size_t J>
-	struct index_pop<std::index_sequence<J>>{
-		using type = std::index_sequence<>;
-	};
-
-	template<size_t J, size_t... Is>
-	struct index_pop<std::index_sequence<J, Is...>>{
-		using type = typename index_concat<std::index_sequence<J>, typename index_pop<std::index_sequence<Is...>>::type >::type;
-	};
 
 	template <class T>
 	constexpr T unsafe_declval() noexcept {
@@ -84,7 +53,7 @@ namespace unpack{
 			if constexpr (succ){ 
 				return as_tuple<Is..., sizeof...(Is)>();
 			} else {
-				return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
+				return as_tuple_help(typename traits::index_pop<std::index_sequence<Is...>>::type{});
 			}
 		}
 		
@@ -97,7 +66,7 @@ namespace unpack{
 			if constexpr (is_constructible<std::index_sequence<Is...>>::value){ 
 				return as_tuple<Is..., sizeof...(Is)>();
 			} else {
-				return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
+				return as_tuple_help(typename traits::index_pop<std::index_sequence<Is...>>::type{});
 			}
 		}
 		
@@ -107,12 +76,12 @@ namespace unpack{
 
 		// TRY ONE: enable if on parameter type 
 //
-//		template<class Seq, class PrevSeq=typename index_pop<Seq>::type>
+//		template<class Seq, class PrevSeq=typename traits::index_pop<Seq>::type>
 //		static constexpr auto as_tuple(typename std::enable_if<!is_constructible<Seq>::value, int>::type = 1) { 
 //			return as_tuple_help(PrevSeq{});
 //		}
 //
-//		template<class Seq, class NextSeq=typename index_push<Seq>::type>
+//		template<class Seq, class NextSeq=typename traits::index_push<Seq>::type>
 //		static constexpr auto as_tuple(typename std::enable_if<is_constructible<Seq>::value, int>::type = 1){ 
 //			return as_tuple<NextSeq>();
 //		}
@@ -120,12 +89,12 @@ namespace unpack{
 //		using type = decltype(as_tuple<std::index_sequence<>>());
 
 		// TRY TWO: enable_if  on default template type
-//		template<class Seq, class PrevSeq=typename index_pop<Seq>::type>
+//		template<class Seq, class PrevSeq=typename traits::index_pop<Seq>::type>
 //		static constexpr auto as_tuple(float) { 
 //			return as_tuple_help(PrevSeq{});
 //		}
 //	
-//		template<class Seq, class NextSeq=typename index_push<Seq>::type, class=typename std::enable_if<is_constructible<Seq>::value>::type >
+//		template<class Seq, class NextSeq=typename traits::index_push<Seq>::type, class=typename std::enable_if<is_constructible<Seq>::value>::type >
 //		static constexpr auto as_tuple(int){ 
 //			return as_tuple<NextSeq>(0);
 //		}
@@ -136,7 +105,7 @@ namespace unpack{
 		// TRY THREE: overload function & SFINE on parameter type 
 		template<size_t... Is>
 		static constexpr auto as_tuple(float){ 
-			return as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{});
+			return as_tuple_help(typename traits::index_pop<std::index_sequence<Is...>>::type{});
 		}
 
 		template<size_t... Is>
@@ -149,7 +118,7 @@ namespace unpack{
 		//TRY FOUR: overload function, SFINE on return type and default template parameter using sizeof
 //		template<class Seq>
 //		static constexpr auto as_tuple(float){ 
-//			return as_tuple_help(typename index_pop<Seq>::type{});
+//			return as_tuple_help(typename traits::index_pop<Seq>::type{});
 //		}
 //
 //		template<size_t... Is> // fail without decltype(T{ type_detector<Is>{}...})
@@ -159,7 +128,7 @@ namespace unpack{
 //
 //		template<class Seq, class = decltype(construct(Seq{}))>
 //		static constexpr auto as_tuple(int) { 
-//			return as_tuple<typename index_push<Seq>::type>(0);
+//			return as_tuple<typename traits::index_push<Seq>::type>(0);
 //		}
 //
 //		using type = decltype(as_tuple<std::index_sequence<>>(0));
@@ -167,12 +136,12 @@ namespace unpack{
 		// TRY FIVE: specialize type
 //		template<class Seq, bool = is_constructible<Seq>::value >
 //		struct tuple_expand{
-//			using type = typename tuple_expand< typename index_push<Seq>::type >::type;	
+//			using type = typename tuple_expand< typename traits::index_push<Seq>::type >::type;	
 //		};
 //
 //		template<size_t... Is>
 //		struct tuple_expand<std::index_sequence<Is...>, false>{
-//			using type =  decltype(as_tuple_help(typename index_pop<std::index_sequence<Is...>>::type{}));
+//			using type =  decltype(as_tuple_help(typename traits::index_pop<std::index_sequence<Is...>>::type{}));
 //		};
 //
 //		using type = typename tuple_expand<std::index_sequence<>>::type;
@@ -180,7 +149,7 @@ namespace unpack{
 		// TRY SIX: specialize type with default template parameter 
 //		template<class Seq, class = T>
 //		struct tuple_expand{
-//			using type =  decltype(as_tuple_help(typename index_pop<Seq>::type{}));
+//			using type =  decltype(as_tuple_help(typename traits::index_pop<Seq>::type{}));
 //		};
 //
 //		template<size_t... Is>

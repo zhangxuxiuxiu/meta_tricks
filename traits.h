@@ -265,4 +265,34 @@ namespace traits{
 	struct member_host<R T::*(Args...)>{
 		using type = T; 
 	};
+
+	// index sequence operations
+	template<class, class>
+	struct index_concat;
+
+	template<size_t... Is, size_t... Js>
+	struct index_concat<std::index_sequence<Is...>, std::index_sequence<Js...>>{
+		using type = std::index_sequence<Is..., Js...>;
+	};
+
+	template<class Seq>
+	struct index_push;
+
+	template<size_t... Is>
+	struct index_push<std::index_sequence<Is...>>{
+		using type = std::index_sequence<Is..., sizeof...(Is)>;
+	};
+
+	template<class Seq>
+	struct index_pop;
+
+	template<size_t J>
+	struct index_pop<std::index_sequence<J>>{
+		using type = std::index_sequence<>;
+	};
+
+	template<size_t J, size_t... Is>
+	struct index_pop<std::index_sequence<J, Is...>>{
+		using type = typename index_concat<std::index_sequence<J>, typename index_pop<std::index_sequence<Is...>>::type >::type;
+	};
 }
