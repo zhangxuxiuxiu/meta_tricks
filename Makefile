@@ -1,48 +1,33 @@
+define compile
+	@for cmpl in "g++-12" "clang++" ;do for std in 14 17 20; do cmd="$${cmpl} -std=c++$${std} ./$(1)_test.cpp -o $(2)"; echo $${cmd}; eval $${cmd}; done done
+endef
+
+
 injector: ./injector.h ./injector_test.cpp
-	g++-12 -std=c++14 ./injector_test.cpp -o ijc  
-	g++-12 -std=c++17 ./injector_test.cpp -o ijc 
-	g++-12 -std=c++20 ./injector_test.cpp -o ijc 
-	clang++ -std=c++14 ./injector_test.cpp -o ijc  
-	clang++ -std=c++17 ./injector_test.cpp -o ijc 
-	clang++ -std=c++20 ./injector_test.cpp -o ijc 
+	$(call compile,injector,injector)
 
 unpack: ./unpack.h ./injector.h ./unpack_test.cpp
-	g++-12 -std=c++14 ./unpack_test.cpp -o upk  
-	g++-12 -std=c++17 ./unpack_test.cpp -o upk 
-	g++-12 -std=c++20 ./unpack_test.cpp -o upk 
-	clang++ -std=c++14 ./unpack_test.cpp -o upk  
-	clang++ -std=c++17 ./unpack_test.cpp -o upk 
-	clang++ -std=c++20 ./unpack_test.cpp -o upk 
+	$(call compile,unpack,unpack)
 
 access: ./private_access.h ./traits.h  ./injector.h ./private_access_test.cpp
-	g++-12 -std=c++20 ./private_access_test.cpp -o pa 
-	g++-12 -std=c++17 ./private_access_test.cpp -o pa 
-	g++-12 -std=c++14 ./private_access_test.cpp -o pa 
-	clang++ -std=c++20 ./private_access_test.cpp -o pa 
-	clang++ -std=c++17 ./private_access_test.cpp -o pa 
-	clang++ -std=c++14 ./private_access_test.cpp -o pa 
+	$(call compile,private_access,access)
 
 smp: ./smp.h ./injector.h ./smp_test.cpp
-	g++-12 -std=c++14 ./smp_test.cpp -o sall
-	g++-12 -std=c++17 ./smp_test.cpp -o sall
-	g++-12 -std=c++20 ./smp_test.cpp -o sall
-	clang++ -std=c++14 ./smp_test.cpp -o sall
-	clang++ -std=c++17 ./smp_test.cpp -o sall
-	clang++ -std=c++20 ./smp_test.cpp -o sall
+	$(call compile,smp,smp)
 
 intern: ./string_intern.h ./string_intern_test.cpp
-	g++-12 -std=c++14 ./string_intern_test.cpp -o sit 
-	g++-12 -std=c++17 ./string_intern_test.cpp -o sit
-	g++-12 -std=c++20 ./string_intern_test.cpp -o sit
-	clang++ -std=c++14 ./string_intern_test.cpp -o sit
-	clang++ -std=c++17 ./string_intern_test.cpp -o sit
-	clang++ -std=c++20 ./string_intern_test.cpp -o sit
+	$(call compile,string_intern,intern)
 
 clean:
-	[[ ! -e ./ijc ]] || rm ./ijc
-	[[ ! -e ./upk ]] || rm ./upk
-	[[ ! -e ./sall ]] || rm ./sall
-	[[ ! -e ./sit ]] || rm ./sit
-	[[ ! -e ./pa ]] || rm ./pa
+	@for bin in injector unpack access smp intern; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
 
 all: injector unpack access smp intern clean
+
+#cxxs:=g++-12 clang++
+#stds:=14 17 20
+#cmds:=$(foreach cmpl, $(cxxs), $(foreach std, $(stds), "$(cmpl) -std=c++$(std) ./filename_test.cpp -o obj")) 
+#
+#define compile
+#	$(foreach cmd, $(cmds), $(echo $(subst filename,$(1),$(subst obj,$(2),$(cmd)) ) ) )	
+#endef
+

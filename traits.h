@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 namespace traits{
 	// list operations
@@ -86,7 +87,6 @@ namespace traits{
 	template< class Trans, class State, class... Ts>		
 	using transform_x_t = typename transform_x< Trans, State, type_list<Ts...> >::type;
 	
-	
 	template<class Base, bool cont = true, bool OkEof = true>
 	struct transform_x_base : std::integral_constant<bool, cont>{
 		using type = Base;	
@@ -110,6 +110,7 @@ namespace traits{
 		template<class T>
 		struct fn{
 			using next_state = typename Tran<T>::type;
+			// TODO if $Tran is a filter, skip current element 
 			using type = typename hof_trans<Urans...>::template fn<next_state>::type;
 		};
 	};
@@ -201,17 +202,18 @@ namespace traits{
 		template<class State, class T>
 		struct fn{
 			template<size_t M>	
-			static constexpr auto impl(Index<M>)  ->typename std::enable_if< (M<=N), Index<M+1> >::type  {
-				return Index<M+1>{}; 	
+			static constexpr auto impl(Index<M>)  ->typename std::enable_if< (M<=N), std::pair<bool,Index<M+1>> >::type  {
+				return std::make_pair(true,Index<M+1>{}); 	
 			}
 
 			static constexpr auto impl(...) { 
-				return typename hof_trans<Trans...>::template fn<T>::type{};	
+				return std::make_pair(false, typename hof_trans<Trans...>::template fn<T>::type{});	
 			}
 
 			using type = struct X {
-				static constexpr bool value = !std::is_same< typename State::type, Index<N+1> >::value; 
-				using type = decltype( impl( typename State::type{} ) );
+				static constexpr auto btype = impl( typename State::type{} );
+				using type = decltype(btype.second);
+				static constexpr bool value = btype.first; 
 				static constexpr bool ok_eof = false;
 			};
 		};
