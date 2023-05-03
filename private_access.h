@@ -42,8 +42,7 @@ namespace unpack{
 	struct Fields {
 		using host_type = typename traits::all_same< traits::type_list<FieldDefines...>, subs_host >::type; 
 	
-		friend auto unpack_host(host_type& obj, Fields* ) 
-			-> decltype( sizeof(injector::Inject<host_type, Fields>), std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines*>(nullptr) )... ) ) {
+		friend auto unpack_host(host_type& obj, decltype( sizeof(injector::Inject<host_type, Fields>), (Fields*)(nullptr) ) ){ 
 			return std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines* >(nullptr) )... ); 
 		}
 	};
