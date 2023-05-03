@@ -22,12 +22,3 @@ clean:
 	@for bin in injector unpack access smp intern; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
 
 all: injector unpack access smp intern clean
-
-#cxxs:=g++-12 clang++
-#stds:=14 17 20
-#cmds:=$(foreach cmpl, $(cxxs), $(foreach std, $(stds), "$(cmpl) -std=c++$(std) ./filename_test.cpp -o obj")) 
-#
-#define compile
-#	$(foreach cmd, $(cmds), $(echo $(subst filename,$(1),$(subst obj,$(2),$(cmd)) ) ) )	
-#endef
-
