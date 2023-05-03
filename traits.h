@@ -78,10 +78,11 @@ namespace traits{
 
 		template<class S>
 		static constexpr auto impl(typename std::enable_if< S::value, int>::type){
-			return typename transform_x< Trans, typename Trans::template fn<S, T>::type, List<Us...> >::type{};
+			return typename transform_x< Trans, S , List<Us...> >::type{};
 		}
 
-		using type = decltype(impl<State>(0)); 
+		using next_state = typename Trans::template fn<State, T>::type;
+		using type = decltype(impl<next_state>(0)); 
 	};
 
 	template< class Trans, class State, class... Ts>		
@@ -130,13 +131,15 @@ namespace traits{
 //	};
 
 	// all same
+	using all_same_default_base = UseTag(UniqueTag);
+
 	template<template<class> class... Trans>
 	struct all_same_trans {
 		template<class State, class T>
 		struct fn{
 			using next_state = struct X{ 
 				using type = typename hof_trans<Trans...>::template fn<T>::type;
-				static constexpr bool value =  std::is_same<typename State::type, type>::value || std::is_void<typename State::type>::value;
+				static constexpr bool value =  std::is_same<typename State::type, type>::value || std::is_same<typename State::type, all_same_default_base>::value;
 				static constexpr bool ok_eof = true;
 			};
 			// fail early
@@ -145,7 +148,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using all_same = transform_x< all_same_trans<Trans...>, transform_x_base<void>, Ts >;
+	using all_same = transform_x< all_same_trans<Trans...>, transform_x_base<all_same_default_base>, Ts >;
 
 	template<class... Ts>
 	using all_same_t = typename all_same< type_list<Ts...> >::type;
