@@ -3,6 +3,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "injector.h"
+
 namespace traits{
 	// list operations
 	template<typename...>
@@ -88,8 +90,8 @@ namespace traits{
 	template< class Trans, class State, class... Ts>		
 	using transform_x_t = typename transform_x< Trans, State, type_list<Ts...> >::type;
 	
-	template<class Base, bool cont = true, bool OkEof = true>
-	struct transform_x_base : std::integral_constant<bool, cont>{
+	template<class Base, bool OkEof = true>
+	struct transform_x_base {
 		using type = Base;	
 		static constexpr bool ok_eof = OkEof;
 	};
@@ -224,7 +226,7 @@ namespace traits{
 	};
 	
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element = transform_x< nth_element_trans<N, Trans...>, transform_x_base<Index<0>, true, false>, Ts >;
+	using nth_element = transform_x< nth_element_trans<N, Trans...>, transform_x_base<Index<0>, false>, Ts >;
 
 	template<size_t N, class... Ts>
 	using nth_element_t = typename nth_element< N, type_list<Ts...> >::type;

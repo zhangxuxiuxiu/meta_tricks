@@ -14,7 +14,7 @@
 	#define UseTag(Tag) decltype(Tag)
 #else
 	#define DeclareUniqueTag(Tag) class Tag 
-	#define UniqueTag std::integral_constant<int, __COUNTER__> 
+	#define UniqueTag std::integral_constant<int, __COUNTER__+28472937> 
 	#define UseTag(Tag) Tag
 #endif
 
