@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <type_traits>
 #include <tuple>
+#include <utility> //forward
 
 #include "injector.h"
 #include "traits.h"
@@ -14,10 +14,9 @@ namespace unpack{
 #if __cplusplus >= 201703L
 	template<auto... F>
 	struct Fields{
-		using host_type = typename traits::nth_element<0, traits::type_list<decltype(F)...>, traits::member_host>::type;
+		using host_type = typename traits::all_same< traits::type_list<decltype(F)...>, traits::member_host>::type;
 	
-		friend auto unpack_host(host_type& obj, Fields* ) 
-			-> decltype( sizeof(injector::Inject<host_type, Fields>), std::forward_as_tuple(obj.*F...) ){
+		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type* ){ 
 			return std::forward_as_tuple(obj.*F...); 
 		}
 	
@@ -42,7 +41,7 @@ namespace unpack{
 	struct Fields {
 		using host_type = typename traits::all_same< traits::type_list<FieldDefines...>, subs_host >::type; 
 	
-		friend auto unpack_host(host_type& obj, decltype( sizeof(injector::Inject<host_type, Fields>), (Fields*)(nullptr) ) ){ 
+		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type*){ 
 			return std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines* >(nullptr) )... ); 
 		}
 	};
@@ -57,16 +56,14 @@ namespace unpack{
 	// access private function 
 #if __cplusplus >= 201703L
 	template<class Tag, auto Fptr>
-	struct Functor: std::index_sequence< sizeof( injector::Inject< Tag, Functor<Tag, Fptr> > ) >
 #else
 	template<class Tag, class F, F Fptr>
-	struct Functor: std::index_sequence< sizeof( injector::Inject< Tag, Functor<Tag, F, Fptr> > ) >
 #endif 
-	{
+	struct Functor {
 		using host_type = typename traits::member_host<decltype(Fptr)>::type; 
 	
 		template<class... Args>
-		friend auto tag_fn(host_type& obj, Functor*, Args&&... args){
+		friend auto tag_fn(host_type& obj, typename injector::Inject< Tag, Functor>::type*, Args&&... args){
 			return (obj.*Fptr)( std::forward<Args>(args)... );
 		}
 	};
