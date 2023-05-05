@@ -395,13 +395,8 @@ namespace traits{
 	template<class FPtr>
 	struct member_host;
 	
-	template<class R, class T>
-	struct member_host<R T::*>{
-		using type = T; 
-	};
-
-	template<class R, class T, class... Args>
-	struct member_host<R T::*(Args...)>{
+	template<class RF, class T>
+	struct member_host<RF T::*>{
 		using type = T; 
 	};
 
