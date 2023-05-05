@@ -3,8 +3,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "injector.h"
-
 namespace traits{
 	// list operations
 	template<typename...>
@@ -158,9 +156,10 @@ namespace traits{
 	template< class Trans, class BaseState, class... Ts>		
 	using transform_x_t = typename transform_x< Trans, BaseState, type_list<Ts...> >::type;
 	
-	template<class Base, bool OkEof = true>
+	template<class Base, bool Emit=true, bool OkEof = true>
 	struct transform_x_base {
 		using type = Base;	
+		static constexpr bool emit  = Emit;
 		static constexpr bool okeof = OkEof;
 	};
 
@@ -271,14 +270,12 @@ namespace traits{
 
 #else
 	// all same
-	using all_same_base = UseTag(UniqueTag);
-
 	struct all_same_trans {
 		template<class State, class T>
 		struct fn{
 			using next_state = struct X{ 
 				using type = T; 
-				static constexpr bool value =  std::is_same<typename State::type, type>::value || std::is_same<typename State::type, all_same_base>::value;
+				static constexpr bool value =  !emit<State>() || std::is_same<typename State::type, type>::value; 
 			};
 			// fail early
 			using type = typename std::enable_if< next_state::value, next_state>::type;
@@ -286,7 +283,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using all_same = transform_x< stateful_trans< all_same_trans, stateless_trans<Trans...> >, transform_x_base<all_same_base, false>, Ts >; // false to trigger compilation error on empty list
+	using all_same = transform_x< stateful_trans< all_same_trans, stateless_trans<Trans...> >, transform_x_base<void, false, false>, Ts >; // false to trigger compilation error on empty list
 
 #endif
 	template<class... Ts>
