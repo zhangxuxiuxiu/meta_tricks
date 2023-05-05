@@ -58,6 +58,20 @@ namespace traits{
 		using type = typename type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >::type;
 	};
 
+	template< template<class...> class Sfinea, class... Args >
+	struct detect{
+		template< template<class...> class sfinea, class... args >
+		static constexpr bool impl( sfinea<Args...>* p){
+			return true;
+		}
+
+		template< template<class...> class sfinea, class... args >
+		static constexpr bool impl(...){
+			return false;
+		}
+
+		static constexpr bool value = impl<Sfinea, Args...>(nullptr);
+	};
 
 #if !defined(NO_TRANSFORM_X)
 	/*
@@ -67,34 +81,29 @@ namespace traits{
 	 * if type is not defined, it means an error intentionally
 	 * */
 	template<class S>
-	static constexpr bool emit_impl(typename std::enable_if< !S::emit, int >::type){
-		return false;
-	}
-
-	template<class S>
-	static constexpr bool emit_impl(...){
-		return true;
-	}
+	using emit_sfinea = std::enable_if<!S::emit>;
 
 	template<class S>
 	static constexpr bool emit(){
-		return emit_impl<S>(0);
+		return !detect<emit_sfinea, S>::value;
 	}
 
 	template<class S>
-	static constexpr bool value_impl(typename std::enable_if< !S::value, int >::type){
-		return false;
-	}
-	template<class S>
-	static constexpr bool value_impl(...){
-		return true;
-	}
+	using value_sfinea = std::enable_if<!S::value>;
 
 	template<class S>
 	static constexpr bool value(){
-		return value_impl<S>(0);
+		return !detect<value_sfinea, S>::value;
 	}
 
+	template<class S>
+	using okeof_sfinea = std::enable_if<!S::okeof>;
+
+	template<class S>
+	static constexpr bool okeof(){
+		return !detect<okeof_sfinea, S>::value;
+	}
+	
 	// transform_x
 	template< class Trans, class State, class Ts>
 	struct transform_x;
@@ -146,8 +155,8 @@ namespace traits{
 		using type = decltype(impl<next_state>(0)); 
 	};
 
-	template< class Trans, class State, class... Ts>		
-	using transform_x_t = typename transform_x< Trans, State, type_list<Ts...> >::type;
+	template< class Trans, class BaseState, class... Ts>		
+	using transform_x_t = typename transform_x< Trans, BaseState, type_list<Ts...> >::type;
 	
 	template<class Base, bool OkEof = true>
 	struct transform_x_base {
@@ -169,9 +178,10 @@ namespace traits{
 		};
 	};
 
-	template<bool B>
+	template<bool Emit=false, bool Okeof=true>
 	struct emitter { 
-		static constexpr bool emit = B;
+		static constexpr bool emit  = Emit;
+		static constexpr bool okeof = Okeof;
 	};
 
 	template<class Tran, class... Urans>
@@ -224,7 +234,7 @@ namespace traits{
 			// Tran is a filter, filter return false
 			template<class Tn>
 			static constexpr auto impl(typename std::enable_if< !Tn::value, int>::type){
-				return emitter<false>{};
+				return emitter<false, okeof<State>()>{};
 			}
 
 			// Tran is a filter, filter return true 
