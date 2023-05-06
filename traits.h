@@ -5,17 +5,17 @@ namespace traits{
 	// detect
 	template< template<class...> class Sfinea, class... Args >
 	struct detect{
-		template< template<class...> class sfinea, class... args >
+		template< template<class...> class sfinea>
 		static constexpr bool impl( sfinea<Args...>* p){
 			return true;
 		}
 
-		template< template<class...> class sfinea, class... args >
+		template< template<class...> class sfinea >
 		static constexpr bool impl(...){
 			return false;
 		}
 
-		static constexpr bool value = impl<Sfinea, Args...>(nullptr);
+		static constexpr bool value = impl<Sfinea>(nullptr);
 	};
 
 	// identity

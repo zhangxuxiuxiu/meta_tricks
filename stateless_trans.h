@@ -47,12 +47,10 @@ namespace traits{
 	
 	template<template<class > class Tran>
 	struct make_trans{
-		using type = struct X{
+		using type = struct X {
 			template<class T>
-			struct fn{
-				using type = struct X{
-					using type = typename Tran<T>::type; 
-				};
+			struct fn {
+				using type  = Tran<T>;
 			};
 		};
 	};
