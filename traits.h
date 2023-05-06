@@ -74,7 +74,7 @@ namespace traits{
 #if !defined(NO_TRANSFORM_X)
 	/*
 	 * typename Trans::fn<State, T>::type is a State
-	 * each State has optional bool value (emit, value, okeof) and an optional type named type
+	 * each State has optional bool value (emit, cont, okeof) and an optional type named type
 	 * if bool value (emit or value or okeof) is not defined, its value is true by default 
 	 * if type is not defined, it means an error intentionally
 	 * */
@@ -87,11 +87,11 @@ namespace traits{
 	}
 
 	template<class S>
-	using value_sfinea = std::enable_if<!S::value>;
+	using cont_sfinea = std::enable_if<!S::cont>;
 
 	template<class S>
-	static constexpr bool value(){
-		return !detect<value_sfinea, S>::value;
+	static constexpr bool cont(){
+		return !detect<cont_sfinea, S>::value;
 	}
 
 	template<class S>
@@ -127,19 +127,19 @@ namespace traits{
 	struct transform_x< Trans, State, List<T, Us...> >{
 		// case 1: !value && !emit => return old State 
 		template<class S>
-		static constexpr auto impl(typename std::enable_if< !value<S>() && !emit<S>(), int>::type){
+		static constexpr auto impl(typename std::enable_if< !cont<S>() && !emit<S>(), int>::type){
 			return typename transform_x<Trans, State, List<>>::type{};
 		}
 		
 		// case 2: value & !S::emit => skip T, use old State to Try Us... 
 		template<class S>
-		static constexpr auto impl(typename std::enable_if< value<S>() && !emit<S>(), int>::type){
+		static constexpr auto impl(typename std::enable_if< cont<S>() && !emit<S>(), int>::type){
 			return typename transform_x< Trans, State, List<Us...> >::type{};
 		}
 
 		// case 3: !S::value & emit => stop searching to return current type 
 		template<class S>
-		static constexpr auto impl(typename std::enable_if< !value<S>() && emit<S>(), int>::type){
+		static constexpr auto impl(typename std::enable_if< !cont<S>() && emit<S>(), int>::type){
 			return typename S::type{};
 		}
 
@@ -271,10 +271,10 @@ namespace traits{
 		struct fn{
 			using next_state = struct X{ 
 				using type = T; 
-				static constexpr bool value =  !emit<State>() || std::is_same<typename State::type, type>::value; 
+				static constexpr bool cont = !emit<State>() || std::is_same<typename State::type, type>::value; 
 			};
 			// fail early
-			using type = typename std::enable_if< next_state::value, next_state>::type;
+			using type = typename std::enable_if< next_state::cont, next_state>::type;
 		};
 	};
 
@@ -349,7 +349,7 @@ namespace traits{
 			using type = struct X {
 				static constexpr auto btype = impl( typename State::type{} );
 				using type = decltype(btype.second);
-				static constexpr bool value = btype.first; 
+				static constexpr bool cont  = btype.first; 
 				static constexpr bool okeof = false;
 			};
 		};
