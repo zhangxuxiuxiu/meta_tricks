@@ -110,7 +110,7 @@ namespace traits{
 	struct transform_x< Trans, State, List<> >{
 		// case 1: more search required at end of list
 		template<class S>
-		static constexpr auto impl(typename std::enable_if<!S::okeof, int>::type){
+		static constexpr auto impl(typename std::enable_if<!okeof<S>(), int>::type){
 			return typename S::nonexist_type{}; // trigger error intentionally
 		}
 
@@ -163,7 +163,8 @@ namespace traits{
 		static constexpr bool okeof = OkEof;
 	};
 
-	// stateless_trans to support chain multiple trans
+	// stateless_trans to support chain multiple stateless trans as a stateless trans
+	// typename stateless_trans::template fn<T>::type is a type with either a sub type to indicate a transform or a sub value to indicate a filter 
 	template< class... Trans>
 	struct stateless_trans_generic;
 
@@ -177,12 +178,6 @@ namespace traits{
 		};
 	};
 
-	template<bool Emit=false, bool Okeof=true>
-	struct emitter { 
-		static constexpr bool emit  = Emit;
-		static constexpr bool okeof = Okeof;
-	};
-
 	template<class Tran, class... Urans>
 	struct stateless_trans_generic<Tran, Urans...>{
 		template<class T>
@@ -190,7 +185,7 @@ namespace traits{
 			// Tran is a filter, filter return false
 			template<class Tn>
 			static constexpr auto impl(typename std::enable_if<!Tn::value,int>::type){
-				return emitter<false>{};
+				return std::false_type{};
 			}
 
 			// Tran is a filter, filter return true 
@@ -224,25 +219,26 @@ namespace traits{
 	template<template<class> class... Trans> 
 	using stateless_trans = stateless_trans_generic< typename make_trans<Trans>::type... >;
 
+	template<bool Emit=false, bool Okeof=true>
+	struct emitter { 
+		static constexpr bool emit  = Emit;
+		static constexpr bool okeof = Okeof;
+	};
+
 	//typename Stateless::template fn<T>::type 
 	//typename Trans::template fn<S, T>::type
 	template<class Trans, class... Stateless> 
 	struct stateful_trans{
 		template<class State, class T>
 		struct fn{
-			// Tran is a filter, filter return false
+			// case 1: Tran is a filter, filter return false
 			template<class Tn>
 			static constexpr auto impl(typename std::enable_if< !Tn::value, int>::type){
 				return emitter<false, okeof<State>()>{};
 			}
 
-			// Tran is a filter, filter return true 
-			template<class Tn>
-			static constexpr auto impl(typename std::enable_if< Tn::value, float >::type){
-				return typename Trans::template fn< State, T >::type{};
-			}
-
-			// Tran is a normal transformation
+			// case 2: Tran is a filter and filter return true, then stateless_trans_generic return Tn that Tn::type==T 
+			// case 3: Tran is a normal transformation
 			template<class Tn>
 			static constexpr auto impl(...){
 				return typename Trans::template fn< State, typename Tn::type >::type{};
