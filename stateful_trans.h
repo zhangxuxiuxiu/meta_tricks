@@ -26,12 +26,20 @@ namespace traits{
 			// case 3: Tran is a normal transformation
 			template<class Tn>
 			static constexpr auto impl(...){
-				return typename Trans::template fn< State, typename Tn::type >::type{};
+				return typename Trans::template fn< State, Tn >::type{};
 			}
 
-			using type = decltype(impl< typename stateless_trans_generic<Stateless...>::template fn<T>::type >(0)); 
+			using type = decltype(impl< typename stateless_trans_filter<Stateless...>::template fn<T>::type >(0)); 
 		};
 	};	
+
+	template<class Trans>
+	struct eager_trans{
+		template<class State, class Lazy>
+		struct fn{
+			using type = typename Trans::template fn<State, typename Lazy::type>::type;
+		};
+	};
 #endif
 
 #ifdef NO_TRANSFORM_X
@@ -64,7 +72,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using all_same = transform_x< stateful_trans< all_same_trans, stateless_trans<Trans...> >, transform_x_base<void, false, false>, Ts >; // false to trigger compilation error on empty list
+	using all_same = transform_x< stateful_trans< eager_trans<all_same_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base<void, false, false>, Ts >; // false to trigger compilation error on empty list
 
 #endif
 	template<class... Ts>
@@ -92,7 +100,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using transform = transform_x< stateful_trans< transform_trans, stateless_trans<Trans...> >, transform_x_base< empty_of_t<Ts> >, Ts>; 
+	using transform = transform_x< stateful_trans< eager_trans<transform_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base< empty_of_t<Ts> >, Ts>; 
 
 #endif
 	template<template<class> class Trans, class... Ts>
@@ -118,7 +126,7 @@ namespace traits{
 	template<size_t N>
 	using Index = std::integral_constant<size_t, N>;
 
-	template<size_t N>
+	template<size_t N, template<class> class Eval = identity>
 	struct nth_element_trans{
 		template<class State, class T>
 		struct fn{
@@ -128,7 +136,7 @@ namespace traits{
 			}
 
 			static constexpr auto impl(...) { 
-				return std::make_pair(false, T{});	
+				return std::make_pair(false, typename Eval<T>::type{});	
 			}
 
 			using type = struct X {
@@ -142,7 +150,13 @@ namespace traits{
 	};
 	
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element = transform_x< stateful_trans< nth_element_trans<N>, stateless_trans<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
+	using nth_element = transform_x< stateful_trans< eager_trans<nth_element_trans<N>>, stateless_trans_filter_default<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
+
+	template<class Lazy>
+	using lazy_eval = Lazy; 
+
+	template<size_t N, class Ts, template<class> class... Trans>
+	using nth_element_lazy = transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_default<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
 
 #endif
 	template<size_t N, class... Ts>
@@ -162,7 +176,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using index_list = transform_x< stateful_trans< index_trans, stateless_trans<Trans...> >, transform_x_base<empty_of_t<Ts>>, Ts >;
+	using index_list = transform_x< stateful_trans< eager_trans<index_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base<empty_of_t<Ts>>, Ts >;
 
 	template<class... Ts>
 	using index_list_t = typename index_list< type_list<Ts...> >::type;

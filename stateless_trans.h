@@ -7,10 +7,10 @@ namespace traits{
 	// stateless_trans to support chain multiple stateless trans as a stateless trans
 	// typename stateless_trans::template fn<T>::type is a type with either a sub type to indicate a transform or a sub value to indicate a filter 
 	template< class... Trans>
-	struct stateless_trans_generic;
+	struct stateless_trans_filter;
 
 	template<>
-	struct stateless_trans_generic<>{
+	struct stateless_trans_filter<>{
 		template<class T>
 		struct fn{
 			using type = struct X {
@@ -20,7 +20,7 @@ namespace traits{
 	};
 
 	template<class Tran, class... Urans>
-	struct stateless_trans_generic<Tran, Urans...>{
+	struct stateless_trans_filter<Tran, Urans...>{
 		template<class T>
 		struct fn{
 			// Tran is a filter, filter return false
@@ -32,13 +32,13 @@ namespace traits{
 			// Tran is a filter, filter return true 
 			template<class Tn>
 			static constexpr auto impl(typename std::enable_if<Tn::value,float>::type){
-				return typename stateless_trans_generic<Urans...>::template fn<T>::type{};
+				return typename stateless_trans_filter<Urans...>::template fn<T>::type{};
 			}
 
 			// Tran is a normal transformation
 			template<class Tn>
 			static constexpr auto impl(...){
-				return typename stateless_trans_generic<Urans...>::template fn<typename Tn::type>::type{};
+				return typename stateless_trans_filter<Urans...>::template fn<typename Tn::type>::type{};
 			}
 
 			using type = decltype(impl< typename Tran::template fn<T>::type >(0)); 
@@ -56,6 +56,33 @@ namespace traits{
 	};
 
 	template<template<class> class... Trans> 
-	using stateless_trans = stateless_trans_generic< typename make_trans<Trans>::type... >;
+	using stateless_trans_filter_default = stateless_trans_filter< typename make_trans<Trans>::type... >;
 
+
+	// only transforms
+	template< class... Trans>
+	struct stateless_trans;
+
+	template<>
+	struct stateless_trans<>{
+		template<class T>
+		struct fn{
+			using type = struct X {
+				using type = T;
+			};
+		};
+	};
+
+	template<class Tran, class... Urans>
+	struct stateless_trans<Tran, Urans...>{
+		template<class T>
+		struct fn{
+			using type = struct X{
+				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >::type;
+			};
+		};
+	};
+
+	template<template<class> class... Trans> 
+	using stateless_trans_default = stateless_trans< typename make_trans<Trans>::type... >;
 }
