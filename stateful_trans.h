@@ -12,8 +12,8 @@ namespace traits{
 #if !defined(NO_TRANSFORM_X)
 	//typename Stateless::template fn<T>::type 
 	//typename Trans::template fn<S, T>::type
-	template<class Trans, class... Stateless> 
-	struct stateful_trans{
+	template<class StatefulTrans, class StatelessTrans,  template<class> class Evaler> 
+	struct stateful_trans_impl{
 		template<class State, class T>
 		struct fn{
 			// case 1: Tran is a filter, filter return false
@@ -26,20 +26,33 @@ namespace traits{
 			// case 3: Tran is a normal transformation
 			template<class Tn>
 			static constexpr auto impl(...){
-				return typename Trans::template fn< State, Tn >::type{};
+				return typename StatefulTrans::template fn< State, typename Evaler<Tn>::type >::type{};
 			}
 
-			using type = decltype(impl< typename stateless_trans_filter<Stateless...>::template fn<T>::type >(0)); 
+			using type = decltype(impl< typename StatelessTrans::template fn<T>::type >(0)); 
 		};
 	};	
 
-	template<class Trans>
-	struct eager_trans{
-		template<class State, class Lazy>
-		struct fn{
-			using type = typename Trans::template fn<State, typename Lazy::type>::type;
-		};
+	template<class Lazy>
+	struct lazy_eval {
+		using type = Lazy; 
 	};
+
+	template<class Trans, class... Stateless> 
+	using stateful_trans_lazy = stateful_trans_impl<Trans, stateless_trans<Stateless...>, lazy_eval>;
+
+	template<class Lazy>
+	struct eager_eval{
+		using type =  typename Lazy::type; 
+	};
+
+	template<class Trans, class... Stateless> 
+	using stateful_trans_eager = stateful_trans_impl<Trans, stateless_trans_filter<Stateless...>, eager_eval>;
+
+	//default is eager, b' most is eager
+	template<class Trans, class... Stateless> 
+	using stateful_trans = stateful_trans_eager<Trans, Stateless...>;
+
 #endif
 
 #ifdef NO_TRANSFORM_X
@@ -72,7 +85,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using all_same = transform_x< stateful_trans< eager_trans<all_same_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base<void, false, false>, Ts >; // false to trigger compilation error on empty list
+	using all_same = transform_x< stateful_trans< all_same_trans, stateless_trans_filter_z<Trans...> >, transform_x_base<void, false, false>, Ts >; // false to trigger compilation error on empty list
 
 #endif
 	template<class... Ts>
@@ -100,7 +113,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using transform = transform_x< stateful_trans< eager_trans<transform_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base< empty_of_t<Ts> >, Ts>; 
+	using transform = transform_x< stateful_trans< transform_trans, stateless_trans_filter_z<Trans...> >, transform_x_base< empty_of_t<Ts> >, Ts>; 
 
 #endif
 	template<template<class> class Trans, class... Ts>
@@ -126,7 +139,7 @@ namespace traits{
 	template<size_t N>
 	using Index = std::integral_constant<size_t, N>;
 
-	template<size_t N, template<class> class Eval = identity>
+	template<size_t N, template<class> class Eval>
 	struct nth_element_trans{
 		template<class State, class T>
 		struct fn{
@@ -150,13 +163,10 @@ namespace traits{
 	};
 	
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element = transform_x< stateful_trans< eager_trans<nth_element_trans<N>>, stateless_trans_filter_default<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
-
-	template<class Lazy>
-	using lazy_eval = Lazy; 
+	using nth_element = transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_filter_z<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
 
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element_lazy = transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_default<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
+	using nth_element_lazy = transform_x< stateful_trans_lazy< nth_element_trans<N, eager_eval>, stateless_trans_z<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
 
 #endif
 	template<size_t N, class... Ts>
@@ -176,7 +186,7 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using index_list = transform_x< stateful_trans< eager_trans<index_trans>, stateless_trans_filter_default<Trans...> >, transform_x_base<empty_of_t<Ts>>, Ts >;
+	using index_list = transform_x< stateful_trans< index_trans, stateless_trans_filter_z<Trans...> >, transform_x_base<empty_of_t<Ts>>, Ts >;
 
 	template<class... Ts>
 	using index_list_t = typename index_list< type_list<Ts...> >::type;

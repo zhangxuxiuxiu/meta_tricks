@@ -56,7 +56,7 @@ namespace traits{
 	};
 
 	template<template<class> class... Trans> 
-	using stateless_trans_filter_default = stateless_trans_filter< typename make_trans<Trans>::type... >;
+	using stateless_trans_filter_z = stateless_trans_filter< typename make_trans<Trans>::type... >;
 
 
 	// only transforms
@@ -77,12 +77,12 @@ namespace traits{
 	struct stateless_trans<Tran, Urans...>{
 		template<class T>
 		struct fn{
-			using type = struct X{
+			using type = struct X{ // nest type in X to support lazy eval
 				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >::type;
 			};
 		};
 	};
 
 	template<template<class> class... Trans> 
-	using stateless_trans_default = stateless_trans< typename make_trans<Trans>::type... >;
+	using stateless_trans_z = stateless_trans< typename make_trans<Trans>::type... >;
 }
