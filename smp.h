@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <type_traits>
+#include <type_traits>	// integral_constant
 
 #include "injector.h"
-#include "traits.h"
+#include "type_list.h"
 
 namespace smp{
 

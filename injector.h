@@ -1,6 +1,6 @@
 #pragma once
 
-#include <type_traits>
+#include <type_traits> // integral_constant, false_type, true_type
 
 #if !defined(__clang__) && defined(__GNUC__)
 # pragma GCC diagnostic push

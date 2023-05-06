@@ -7,6 +7,7 @@
 
 #include "injector.h"
 #include "traits.h"
+#include "stateful_trans.h"
 
 namespace unpack{
 
