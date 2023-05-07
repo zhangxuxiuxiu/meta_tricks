@@ -14,7 +14,7 @@ namespace traits{
 	 * if type is not defined, it means an error intentionally
 	 * */
 	template<class S>
-	using emit_sfinea = std::enable_if<!S::emit>;
+	using emit_sfinea = std::enable_if<!S::emit>::type;
 
 	template<class S>
 	static constexpr bool emit(){
@@ -22,7 +22,7 @@ namespace traits{
 	}
 
 	template<class S>
-	using cont_sfinea = std::enable_if<!S::cont>;
+	using cont_sfinea = std::enable_if<!S::cont>::type;
 
 	template<class S>
 	static constexpr bool cont(){
@@ -30,7 +30,7 @@ namespace traits{
 	}
 
 	template<class S>
-	using okeof_sfinea = std::enable_if<!S::okeof>;
+	using okeof_sfinea = std::enable_if<!S::okeof>::type;
 
 	template<class S>
 	static constexpr bool okeof(){

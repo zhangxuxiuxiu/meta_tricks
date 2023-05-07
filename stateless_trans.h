@@ -78,7 +78,7 @@ namespace traits{
 		template<class T>
 		struct fn{
 			using type = struct X{ // nest type in X to support lazy eval
-				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >::type;
+				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >::type::type;
 			};
 		};
 	};

@@ -77,7 +77,7 @@ namespace traits{
 		struct fn{
 			using next_state = struct X{ 
 				using type = T; 
-				static constexpr bool cont = !emit<State>() || std::is_same<typename State::type, type>::value; 
+				static constexpr bool cont = std::is_same<typename State::type, type>::value || !emit<State>(); 
 			};
 			// fail early
 			using type = typename std::enable_if< next_state::cont, next_state>::type;
@@ -143,19 +143,24 @@ namespace traits{
 	struct nth_element_trans{
 		template<class State, class T>
 		struct fn{
+			template<bool B, class U>
+			struct Y : std::integral_constant<bool, B>{
+				using type = U;	
+			}; 
+
 			template<size_t M>	
-			static constexpr auto impl(typename std::enable_if< (M<=N), Index<M>>::type) {
-				return std::make_pair(true,Index<M+1>{}); 	
+			static constexpr auto impl(Index<M>, typename std::enable_if< (M<N), int>::type=0) {
+				return Y<true,Index<M+1>>{}; 	
 			}
 
 			static constexpr auto impl(...) { 
-				return std::make_pair(false, typename Eval<T>::type{});	
+				return Y<false, typename Eval<T>::type>{};	
 			}
 
 			using type = struct X {
 				static constexpr auto btype = impl( typename State::type{} );
-				using type = decltype(btype.second);
-				static constexpr bool cont  = btype.first; 
+				using type = typename decltype(btype)::type;
+				static constexpr bool cont  = decltype(btype)::value; 
 				static constexpr bool okeof = false;
 			};
 		};
@@ -163,14 +168,14 @@ namespace traits{
 	};
 	
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element = transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_filter_z<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
+	using nth_element = typename transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_filter_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >::type;
 
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element_lazy = transform_x< stateful_trans_lazy< nth_element_trans<N, eager_eval>, stateless_trans_z<Trans...> >, transform_x_base<Index<0>, false>, Ts >;
+	using nth_element_lazy = typename transform_x< stateful_trans_lazy< nth_element_trans<N, eager_eval>, stateless_trans_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >::type;
 
 #endif
 	template<size_t N, class... Ts>
-	using nth_element_t = typename nth_element< N, type_list<Ts...> >::type;
+	using nth_element_t = nth_element< N, type_list<Ts...> >;
 
 	// index type list
 	template<size_t N, class T>
