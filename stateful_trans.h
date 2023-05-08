@@ -29,7 +29,7 @@ namespace traits{
 				return typename StatefulTrans::template fn< State, typename Evaler<Tn>::type >::type{};
 			}
 
-			using type = decltype(impl< typename StatelessTrans::template fn<T>::type >(0)); 
+			using type = decltype(impl< typename StatelessTrans::template fn<T> >(0)); 
 		};
 	};	
 

@@ -5,7 +5,7 @@
 namespace traits{
 
 	// stateless_trans to support chain multiple stateless trans as a stateless trans
-	// typename stateless_trans::template fn<T>::type is a type with either a sub type to indicate a transform or a sub value to indicate a filter 
+	// typename stateless_trans::template fn<T> is a type with either a sub type to indicate a transform or a sub value to indicate a filter 
 	template< class... Trans>
 	struct stateless_trans_filter;
 
@@ -13,46 +13,38 @@ namespace traits{
 	struct stateless_trans_filter<>{
 		template<class T>
 		struct fn{
-			using type = struct X {
-				using type = T;
-			};
+			using type = T;
 		};
 	};
 
 	template<class Tran, class... Urans>
 	struct stateless_trans_filter<Tran, Urans...>{
 		template<class T>
-		struct fn{
-			// Tran is a filter, filter return false
-			template<class Tn>
-			static constexpr auto impl(typename std::enable_if<!Tn::value,int>::type){
-				return std::false_type{};
-			}
+		struct fn_impl{
+			// Tran is a normal transformation
+			template<class Tn, class = bool>
+			struct X : stateless_trans_filter<Urans...>::template fn<typename Tn::type>{};
 
 			// Tran is a filter, filter return true 
 			template<class Tn>
-			static constexpr auto impl(typename std::enable_if<Tn::value,float>::type){
-				return typename stateless_trans_filter<Urans...>::template fn<T>::type{};
-			}
+			struct X<Tn, typename std::enable_if<Tn::value,bool>::type> : stateless_trans_filter<Urans...>::template fn<T>{};
 
-			// Tran is a normal transformation
+			// Tran is a filter, filter return false 
 			template<class Tn>
-			static constexpr auto impl(...){
-				return typename stateless_trans_filter<Urans...>::template fn<typename Tn::type>::type{};
-			}
+			struct X<Tn, typename std::enable_if<!Tn::value,bool>::type> : std::false_type{};
 
-			using type = decltype(impl< typename Tran::template fn<T>::type >(0)); 
+			using type = X<typename Tran::template fn<T>>; 
 		};
+
+		template<class T>
+		struct fn : fn_impl<T>::type{};
 	};
 
 	template<template<class > class Tran>
 	struct make_trans_filter{
 		using type = struct X {
 			template<class T>
-			struct fn {
-				using type = Tran<T>; 
-			};
-
+			struct fn : Tran<T>{};
 		};
 	};
 
@@ -68,32 +60,21 @@ namespace traits{
 	struct stateless_trans<>{
 		template<class T>
 		struct fn{
-			using type = struct X {
-				using type = T;
-			};
+			using type = T;
 		};
 	};
 
 	template<class Tran, class... Urans>
 	struct stateless_trans<Tran, Urans...>{
 		template<class T>
-		struct fn{
-			using type = struct X{ // nest type in X to support lazy eval
-				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type::type >::type::type;
-			};
-		};
+		struct fn : stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >{};
 	};
 
 	template<template<class > class Tran>
 	struct make_trans{
 		using type = struct X {
 			template<class T>
-			struct fn {
-				using type = struct X { // rather than use Tran<T> here, through nest type in X to support lazy eval
-					using type = typename Tran<T>::type; 
-				};
-			};
-
+			struct fn : Tran<T>{};
 		};
 	};
 
