@@ -65,7 +65,7 @@ namespace traits{
 		using type = T;
 	};
 	
-	{template< template<class...> class List, class T, class... Us>
+	template< template<class...> class List, class T, class... Us>
 	struct all_same< List<T, T, Us...> >{
 		using type = typename all_same< List<T, Us...> >::type;
 	};
