@@ -51,7 +51,7 @@ int main(){
 	static_assert( std::is_same< typename transform< type_list<int, const char, long>, std::is_integral>::type, type_list<int, const char, long>>::value);
 	static_assert( std::is_same< typename transform< type_list<int, const char, long>, std::is_integral, std::add_pointer, std::is_pointer, std::remove_pointer, std::is_const>::type, type_list<const char>>::value);
 	static_assert( std::is_same< typename transform< type_list<int, const char, long>, std::is_integral, std::add_const>::type, type_list<const int, const char, const long>>::value);
-	static_assert(okeof<transform_x_base<type_list<>, true, true>>());
+	static_assert(okeof<transform_x_state<type_list<>, true, true>>());
 	static_assert( std::is_same< typename transform< type_list<int, const char, long>, std::is_integral, std::add_const, std::is_pointer>::type, type_list<>>::value);
 
 	// nth_element

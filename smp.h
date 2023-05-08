@@ -23,34 +23,25 @@ namespace smp{
 
 	#if __cplusplus < 202002L
 		// 2: Current State 
-		template<
-			class EvalTag,
-			unsigned N = 0,
+		template< class EvalTag, unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			int Trigger = sizeof(typename injector::Inject<step<0>, state_t<0,InitialState>>::type) + sizeof(injector::StateOf<step<N>>) 
-		>
+			int Trigger = sizeof(typename injector::Inject<step<0>, state_t<0,InitialState>>::type) + sizeof(injector::StateOf<step<N>>) >
 		static constexpr auto get_state(int) {
 			return get_state<EvalTag, N + 1>(1);
 		}
 
-		template<
-			class EvalTag,
-			unsigned N = 0,
+		template< class EvalTag, unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			int Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
-		>
+			int Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type ) >
 		static constexpr auto get_state(float) {
 			return injector::StateOf< step<N-1> >{};
 		}
 
 	#else
 		// 2: Current State 
-		template<
-			class EvalTag,
-			unsigned N = 0,
+		template< class EvalTag, unsigned N = 0,
 			// Instantiation of initial state is triggered for sure, because $Current&$Transform both invoke $get_state
-			auto Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type )
-		>
+			auto Trigger = sizeof( typename injector::Inject<step<0>, state_t<0,InitialState>>::type ) >
 		[[nodiscard]]
 		static constexpr auto get_state(int ) {
 			constexpr bool counted_past_n = requires {
@@ -66,10 +57,8 @@ namespace smp{
 
 
 	#endif
-		template<
-			DeclareUniqueTag(EvalTag),
-			class State = decltype(get_state<UseTag(EvalTag)>(0))
-		>
+		template< DeclareUniqueTag(EvalTag),
+			  class State = decltype(get_state<UseTag(EvalTag)>(0)) >
 		using Current = typename State::state;
 
 
@@ -87,11 +76,8 @@ namespace smp{
 			using type = typename Trans<CurState, Args...>::type;
 		};
 
-		template<
-			template<class, class... > class Trans,
-			class Args,
-			class EvalTag
-		>
+		template< template<class, class... > class Trans,
+			  class Args, class EvalTag >
 		static constexpr auto transform_impl() {
 			using cur_state_t = decltype(get_state<EvalTag>(0));
 			using cur_state = typename cur_state_t::state;
@@ -99,11 +85,8 @@ namespace smp{
 			return typename injector::Inject< step<cur_state_t::n + 1>, state_t<cur_state_t::n+1, next_state> >::type{};                        // E9.3
 		}
 
-		template<
-			template<class, class... > class Trans,
-			class Args,
-			DeclareUniqueTag(EvalTag)
-		>
+		template< template<class, class... > class Trans,
+			  class Args, DeclareUniqueTag(EvalTag) >
 		using Transform =  decltype(transform_impl<Trans, Args, UseTag(EvalTag)>());
 
 	};

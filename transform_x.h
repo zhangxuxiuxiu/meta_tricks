@@ -13,29 +13,18 @@ namespace traits{
 	 * if bool value (emit or value or okeof) is not defined, its value is true by default 
 	 * if type is not defined, it means an error intentionally
 	 * */
-	template<class S>
-	using emit_sfinea = typename std::enable_if<!S::emit>::type;
+#define TRANS_STATE_VALUE(name) 						\
+	template<class S>							\
+	using name##_sfinea = typename std::enable_if<!S::name>::type;		\
+										\
+	template<class S>							\
+	static constexpr bool name(){						\
+		return !detect<name##_sfinea, S>::value;			\
+	}									\
 
-	template<class S>
-	static constexpr bool emit(){
-		return !detect<emit_sfinea, S>::value;
-	}
-
-	template<class S>
-	using cont_sfinea = typename std::enable_if<!S::cont>::type;
-
-	template<class S>
-	static constexpr bool cont(){
-		return !detect<cont_sfinea, S>::value;
-	}
-
-	template<class S>
-	using okeof_sfinea = typename std::enable_if<!S::okeof>::type;
-
-	template<class S>
-	static constexpr bool okeof(){
-		return !detect<okeof_sfinea, S>::value;
-	}
+	TRANS_STATE_VALUE(emit)
+	TRANS_STATE_VALUE(cont)
+	TRANS_STATE_VALUE(okeof)
 	
 	// transform_x
 	template< class Trans, class State, class Ts>
@@ -69,17 +58,12 @@ namespace traits{
 	using transform_x_t = typename transform_x< Trans, BaseState, type_list<Ts...> >::type;
 	
 	template<class Base, bool Emit=true, bool OkEof = true>
-	struct transform_x_base {
+	struct transform_x_state {
 		using type = Base;	
 		static constexpr bool emit  = Emit;
 		static constexpr bool okeof = OkEof;
 	};
 
-	template<bool Emit=false, bool Okeof=true>
-	struct emitter { 
-		static constexpr bool emit  = Emit;
-		static constexpr bool okeof = Okeof;
-	};
 #endif
 
 }

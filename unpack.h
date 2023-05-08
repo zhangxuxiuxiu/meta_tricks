@@ -35,7 +35,6 @@ namespace unpack{
 		}
 
 #if __cplusplus >= 202002L
-
 		template<size_t... Is>
 		static constexpr auto as_tuple() {
 			constexpr auto succ = requires{ T{ type_detector<Is>{}... }; };
@@ -67,7 +66,6 @@ namespace unpack{
 		using type = decltype(as_tuple<>());
 
 #elif __cplusplus >= 201402L
-
 		template<size_t... Is>
 		static constexpr auto as_tuple(float){ 
 			return as_tuple_help(typename traits::index_pop<std::index_sequence<Is...>>::type{});
@@ -79,11 +77,8 @@ namespace unpack{
 		}
 
 		using type = decltype(as_tuple<>(0));
-
 #else 
 #	error __cplusplus must be at least 201402L
 #endif
-
 	};
-
 }

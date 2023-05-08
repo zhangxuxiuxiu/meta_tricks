@@ -20,7 +20,6 @@ namespace unpack{
 		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type* ){ 
 			return std::forward_as_tuple(obj.*F...); 
 		}
-	
 	};
 #else
 	template<class T, T... F>
@@ -30,7 +29,6 @@ namespace unpack{
 		friend auto FieldsEval(host_type& obj, SubF* ){
 			return std::forward_as_tuple(obj.*F...); 
 		}
-	
 	};
 
 	template<class T>
@@ -46,7 +44,6 @@ namespace unpack{
 			return std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines* >(nullptr) )... ); 
 		}
 	};
-	
 #endif
 
 	template<class Host>
