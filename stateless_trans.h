@@ -44,20 +44,21 @@ namespace traits{
 			using type = decltype(impl< typename Tran::template fn<T>::type >(0)); 
 		};
 	};
-	
+
 	template<template<class > class Tran>
-	struct make_trans{
+	struct make_trans_filter{
 		using type = struct X {
 			template<class T>
 			struct fn {
-				using type  = Tran<T>;
+				using type = Tran<T>; 
 			};
+
 		};
 	};
 
 	template<template<class> class... Trans> 
-	using stateless_trans_filter_z = stateless_trans_filter< typename make_trans<Trans>::type... >;
-
+	using stateless_trans_filter_z = stateless_trans_filter< typename make_trans_filter<Trans>::type... >;
+	
 
 	// only transforms
 	template< class... Trans>
@@ -78,8 +79,21 @@ namespace traits{
 		template<class T>
 		struct fn{
 			using type = struct X{ // nest type in X to support lazy eval
-				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >::type::type;
+				using type = typename stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type::type >::type::type;
 			};
+		};
+	};
+
+	template<template<class > class Tran>
+	struct make_trans{
+		using type = struct X {
+			template<class T>
+			struct fn {
+				using type = struct X { // rather than use Tran<T> here, through nest type in X to support lazy eval
+					using type = typename Tran<T>::type; 
+				};
+			};
+
 		};
 	};
 

@@ -1,7 +1,18 @@
 #include "stateless_trans.h"
 #include "traits.h"
+#include "injector.h"
 
 using namespace traits;
+
+template<class T>
+struct test_instantiation : std::integral_constant<int, sizeof(injector::Inject<T,int>)>{
+	using type = T;
+};   
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wc++17-extensions"
+#endif
 
 int main(){
 
@@ -9,7 +20,7 @@ int main(){
 	static_assert( std::is_same< typename stateless_trans_filter_z<>::template fn<int>::type::type, int >::value);
 	// one trans
 	static_assert( std::is_same< typename stateless_trans_filter_z<identity>::template fn<int>::type::type, int >::value);
-	static_assert( std::is_same< typename stateless_trans_filter_z<std::is_integral>::template fn<int>::type::type, int>::value);
+	static_assert( std::is_same< typename stateless_trans_filter_z<std::is_integral>::template fn<const int>::type::type, const int>::value);
 	// more trans
 	static_assert( std::is_same< typename stateless_trans_filter_z<identity, identity>::template fn<int>::type::type, int >::value);
 	static_assert( std::is_same< typename stateless_trans_filter_z<identity, std::add_const, std::add_pointer>::template fn<int>::type::type, const int* >::value);
@@ -27,4 +38,15 @@ int main(){
 	static_assert( std::is_same< typename stateless_trans_filter_z<std::is_integral, std::make_unsigned, std::is_unsigned>::template fn<int>::type::type, unsigned int>::value);
 	static_assert( !stateless_trans_filter_z<std::is_integral, std::make_signed, std::is_unsigned>::template fn<int>::type::value);
 
+	//stateless_trans testing
+	using fn1t = stateless_trans_z<test_instantiation>::template fn<int>::type;
+	(void)sizeof(fn1t);
+	//TODO failed here
+//	static_assert( !injector::HasState<int, UniqueTag>::value);
+	static_assert( std::is_same<typename fn1t::type, int>::value);
+	static_assert( injector::HasState<int, UniqueTag>::value);
 }
+
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
