@@ -154,7 +154,7 @@ namespace traits{
 			}
 
 			static constexpr auto impl(...) { 
-				return Y<false, typename Eval<T>::type>{};	
+				return Y<false, typename Eval<T>::type>{};
 			}
 
 			using type = struct X {
@@ -164,18 +164,17 @@ namespace traits{
 				static constexpr bool okeof = false;
 			};
 		};
-
 	};
-	
-	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element = typename transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_filter_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >::type;
 
 	template<size_t N, class Ts, template<class> class... Trans>
-	using nth_element_lazy = typename transform_x< stateful_trans_lazy< nth_element_trans<N, eager_eval>, stateless_trans_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >::type;
+	using nth_element = transform_x< stateful_trans< nth_element_trans<N, lazy_eval>, stateless_trans_filter_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >;
+
+	template<size_t N, class Ts, template<class> class... Trans>
+	using nth_element_lazy = transform_x< stateful_trans_lazy< nth_element_trans<N, eager_eval>, stateless_trans_z<Trans...> >, transform_x_base<Index<0>, false, false>, Ts >;
 
 #endif
 	template<size_t N, class... Ts>
-	using nth_element_t = nth_element< N, type_list<Ts...> >;
+	using nth_element_t = typename nth_element< N, type_list<Ts...> >::type;
 
 	// index type list
 	template<size_t N, class T>

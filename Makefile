@@ -9,6 +9,12 @@ injector: ./injector.h ./injector_test.cpp
 unpack: ./unpack.h ./injector.h ./type_list.h ./unpack_test.cpp
 	$(call compile,unpack,unpack)
 
+stateful: ./traits.h ./stateless_trans.h ./transform_x.h ./stateful_trans.h ./injector.h ./stateful_trans_test.cpp
+	$(call compile,stateful_trans,stateful)
+
+stateless: ./stateless_trans.h ./injector.h ./stateless_trans_test.cpp
+	$(call compile,stateless_trans,stateless)
+
 access: ./private_access.h ./traits.h ./stateless_trans.h ./transform_x.h ./stateful_trans.h ./injector.h ./private_access_test.cpp
 	$(call compile,private_access,access)
 
@@ -19,6 +25,6 @@ intern: ./string_intern.h ./string_intern_test.cpp
 	$(call compile,string_intern,intern)
 
 clean:
-	@for bin in injector unpack access smp intern; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
+	@for bin in injector unpack stateful stateless access smp intern; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
 
-all: injector unpack access smp intern clean
+all: injector unpack stateful stateless access smp intern clean
