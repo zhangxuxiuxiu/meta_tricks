@@ -50,34 +50,4 @@ namespace traits{
 
 	template<template<class> class... Trans> 
 	using stateless_trans_filter_z = stateless_trans_filter< typename make_trans_filter<Trans>::type... >;
-	
-
-	// only transforms
-	template< class... Trans>
-	struct stateless_trans;
-
-	template<>
-	struct stateless_trans<>{
-		template<class T>
-		struct fn{
-			using type = T;
-		};
-	};
-
-	template<class Tran, class... Urans>
-	struct stateless_trans<Tran, Urans...>{
-		template<class T>
-		struct fn : stateless_trans<Urans...>::template fn< typename Tran::template fn<T>::type >{};
-	};
-
-	template<template<class > class Tran>
-	struct make_trans{
-		using type = struct X {
-			template<class T>
-			struct fn : Tran<T>{};
-		};
-	};
-
-	template<template<class> class... Trans> 
-	using stateless_trans_z = stateless_trans< typename make_trans<Trans>::type... >;
 }

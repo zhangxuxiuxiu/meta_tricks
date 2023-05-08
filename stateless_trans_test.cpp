@@ -40,22 +40,6 @@ int main(){
 	// combine filter and transform
 	static_assert( std::is_same< typename stateless_trans_filter_z<std::is_integral, std::make_unsigned, std::is_unsigned>::template fn<int>::type, unsigned int>::value);
 	static_assert( !stateless_trans_filter_z<std::is_integral, std::make_signed, std::is_unsigned>::template fn<int>::value);
-
-	//stateless_trans testing
-	using fnt = typename make_trans<test_instantiation>::type;
-	(void)sizeof(fnt);
-	static_assert( !injector::HasState<int, UniqueTag>::value);
-	(void)sizeof(typename fnt::template fn<int>::type);
-	//TODO failed here
-//	static_assert( !injector::HasState<int, UniqueTag>::value);
-
-	using stz = stateless_trans_z<test_instantiation>;
-	(void)sizeof(stz);
-	//TODO failed here
-//	static_assert( !injector::HasState<int, UniqueTag>::value);
-
-	using fn1t = typename stateless_trans_z<test_instantiation>::template fn<int>::type;
-	(void)sizeof(fn1t);
 }
 
 #ifdef __clang__

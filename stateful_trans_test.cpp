@@ -67,22 +67,6 @@ int main(){
 //	std::cout << typeid(typename stateless_trans_z<>::template fn<const int>::type::type).name() << '\n';
 //	static_assert( std::is_same< typename stateless_trans_z<>::template fn<const int>::type::type, const int>::value );
 //
-//	std::cout << typeid(typename stateful_trans_lazy<nth_element_trans<0, eager_eval>, stateless_trans_z<>>::template fn<transform_x_base<Index<0>,false, false>,const int>::type).name() << '\n';
-//	std::cout << typeid(typename stateful_trans_lazy<nth_element_trans<0, eager_eval>, stateless_trans_z<>>::template fn<transform_x_base<Index<0>,false, false>, int>::type::type).name() << '\n';
-//	static_assert( std::is_same<typename stateful_trans_lazy<nth_element_trans<0, eager_eval>, stateless_trans_z<>>::template fn<transform_x_base<Index<0>,false, false>, const char>::type::type, const char>::value);
-
-	static_assert( std::is_same< typename nth_element_lazy< 0, type_list<int, const char, long, float>>::type, int>::value);
-	static_assert( std::is_same< typename nth_element_lazy< 1, type_list<int, const char, long, float>>::type, const char>::value);
-	static_assert( std::is_same< typename nth_element_lazy< 2, type_list<int, const char, long, float>>::type, long>::value);
-	static_assert( std::is_same< typename nth_element_lazy< 3, type_list<int, const char, long, float>>::type, float>::value);
-
-	// test lazy instantiation
-	static_assert( std::is_same< typename nth_element_lazy< 3, type_list<int, const char, long, float>, test_instantiation >::type,float>::value);
-//      TODO failed cases
-//	static_assert( !injector::HasState<int, UniqueTag>::value);
-//	static_assert( !injector::HasState<const char, UniqueTag>::value);
-//	static_assert( !injector::HasState<long, UniqueTag>::value);
-	static_assert( injector::HasState<float, UniqueTag>::value);
 
 	// index list
 	static_assert( std::is_same< index_list_t<int,long>, type_list<IndexedType<0,int>, IndexedType<1,long>> >::value );
