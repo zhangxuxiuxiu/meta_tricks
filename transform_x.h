@@ -42,45 +42,25 @@ namespace traits{
 	struct transform_x;
 
 	template< class Trans, class State, template<class...> class List>
-	struct transform_x< Trans, State, List<> >{
-		template<class S, bool = !okeof<S>()>
-		struct X{
-			using type = typename S::nonexist_type;
-		};
-
-		template<class S>
-		struct X<S, false>{
-			using type = typename S::type;
-		};
-
-		using type = typename X<State>::type;
-	};
+	struct transform_x< Trans, State, List<> > : std::enable_if<okeof<State>(), State>::type{};
 	
 	template< class Trans, class State, template<class...> class List, class T, class... Us >
 	struct transform_x< Trans, State, List<T, Us...> >{
 		// case 1: !cont && !emit => return old State 
 		template<class S, bool cont = cont<S>(), bool emit = emit<S>()> // false, false
-		struct X{
-			using type = typename transform_x<Trans, State, List<>>::type;
-		};
+		struct X : transform_x<Trans, State, List<>>{};
 		
 		// case 2: cont & !S::emit => skip T, use old State to Try Us... 
 		template<class S>
-		struct X<S, true, false>{
-			using type = typename transform_x< Trans, State, List<Us...> >::type;
-		};
+		struct X<S, true, false> : transform_x< Trans, State, List<Us...> >{};
 
 		// case 3: !S::cont & emit => stop searching to return current type 
 		template<class S>
-		struct X<S, false, true>{
-			using type = typename S::type;
-		};
+		struct X<S, false, true> : S{};
 
 		// case 4: cont & emit => Try Us... 
 		template<class S>
-		struct X<S, true,true>{
-			using type = typename transform_x< Trans, S, List<Us...> >::type;
-		};
+		struct X<S, true,true> : transform_x< Trans, S, List<Us...> >{};
 
 		using type = typename X<typename Trans::template fn<State, T>::type>::type;
 	};
