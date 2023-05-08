@@ -14,7 +14,7 @@ namespace traits{
 	 * if type is not defined, it means an error intentionally
 	 * */
 	template<class S>
-	using emit_sfinea = std::enable_if<!S::emit>::type;
+	using emit_sfinea = typename std::enable_if<!S::emit>::type;
 
 	template<class S>
 	static constexpr bool emit(){
@@ -22,7 +22,7 @@ namespace traits{
 	}
 
 	template<class S>
-	using cont_sfinea = std::enable_if<!S::cont>::type;
+	using cont_sfinea = typename std::enable_if<!S::cont>::type;
 
 	template<class S>
 	static constexpr bool cont(){
@@ -30,7 +30,7 @@ namespace traits{
 	}
 
 	template<class S>
-	using okeof_sfinea = std::enable_if<!S::okeof>::type;
+	using okeof_sfinea = typename std::enable_if<!S::okeof>::type;
 
 	template<class S>
 	static constexpr bool okeof(){
@@ -43,49 +43,46 @@ namespace traits{
 
 	template< class Trans, class State, template<class...> class List>
 	struct transform_x< Trans, State, List<> >{
-		// case 1: more search required at end of list
-		template<class S>
-		static constexpr auto impl(typename std::enable_if<!okeof<S>(), int>::type){
-			return typename S::nonexist_type{}; // trigger error intentionally
-		}
+		template<class S, bool = !okeof<S>()>
+		struct X{
+			using type = typename S::nonexist_type;
+		};
 
-		// case 2: no more search required at end of list
 		template<class S>
-		static constexpr auto impl(...){
-			return typename State::type{};
-		}
+		struct X<S, false>{
+			using type = typename S::type;
+		};
 
-		using type = decltype(impl<State>(0));
+		using type = typename X<State>::type;
 	};
 	
 	template< class Trans, class State, template<class...> class List, class T, class... Us >
 	struct transform_x< Trans, State, List<T, Us...> >{
-		// case 1: !value && !emit => return old State 
-		template<class S>
-		static constexpr auto impl(typename std::enable_if< !cont<S>() && !emit<S>(), int>::type){
-			return typename transform_x<Trans, State, List<>>::type{};
-		}
+		// case 1: !cont && !emit => return old State 
+		template<class S, bool cont = cont<S>(), bool emit = emit<S>()> // false, false
+		struct X{
+			using type = typename transform_x<Trans, State, List<>>::type;
+		};
 		
-		// case 2: value & !S::emit => skip T, use old State to Try Us... 
+		// case 2: cont & !S::emit => skip T, use old State to Try Us... 
 		template<class S>
-		static constexpr auto impl(typename std::enable_if< cont<S>() && !emit<S>(), int>::type){
-			return typename transform_x< Trans, State, List<Us...> >::type{};
-		}
+		struct X<S, true, false>{
+			using type = typename transform_x< Trans, State, List<Us...> >::type;
+		};
 
-		// case 3: !S::value & emit => stop searching to return current type 
+		// case 3: !S::cont & emit => stop searching to return current type 
 		template<class S>
-		static constexpr auto impl(typename std::enable_if< !cont<S>() && emit<S>(), int>::type){
-			return typename S::type{};
-		}
+		struct X<S, false, true>{
+			using type = typename S::type;
+		};
 
-		// case 4: value & emit => Try Us... 
+		// case 4: cont & emit => Try Us... 
 		template<class S>
-		static constexpr auto impl(...){
-			return typename transform_x< Trans, S, List<Us...> >::type{};
-		}
+		struct X<S, true,true>{
+			using type = typename transform_x< Trans, S, List<Us...> >::type;
+		};
 
-		using next_state = typename Trans::template fn<State, T>::type;
-		using type = decltype(impl<next_state>(0)); 
+		using type = typename X<typename Trans::template fn<State, T>::type>::type;
 	};
 
 	template< class Trans, class BaseState, class... Ts>		
