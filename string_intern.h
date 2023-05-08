@@ -3,32 +3,31 @@
 //http://alexpolt.github.io/intern.html
 //https://github.com/alexpolt/luple/blob/master/intern.h
 
+#include <type_traits>
+
 #define N3599
 
 namespace intern {
 
-  template<char... NN> struct string {
+	template<char... NN> 
+	struct string {
+		static constexpr char const value[ sizeof...(NN) ]{NN...};
 
-    static constexpr char const value[ sizeof...(NN) ]{NN...};
+		static_assert( value[ sizeof...(NN) - 1 ] == '\0', "interned string was too long, see $(...) macro" );
 
-    static_assert( value[ sizeof...(NN) - 1 ] == '\0', "interned string was too long, see $(...) macro" );
+		static constexpr auto data() { return value; }
+	};
 
-    static constexpr auto data() { return value; }
-  };
+	template<char... N> constexpr char const string<N...>::value[];
 
-  template<char... N> constexpr char const string<N...>::value[];
- 
-  template<int N>
-  constexpr char ch ( char const(&s)[N], int i ) { return i < N ? s[i] : '\0'; }
+	template<int N>
+	constexpr char ch ( char const(&s)[N], int i ) { 
+		return i < N ? s[i] : '\0'; 
+	}
 
-  template<typename T> struct is_string {
-    static const bool value = false;
-  };
+	template<typename T> struct is_string : std::false_type{};
 
-  template<char... NN> struct is_string< string<NN...> > {
-    static const bool value = true;
-  };
-
+	template<char... NN> struct is_string< string<NN...> > : std::true_type{};
 }
 
 
@@ -39,10 +38,10 @@ namespace intern {
 # pragma clang diagnostic ignored "-Wgnu-string-literal-operator-template" 
 #endif
 
-  template<typename T, T... C>
-  auto operator ""_intern() {
-    return intern::string<C..., T{}>{};
-  }
+template<typename T, T... C>
+auto operator ""_intern() {
+	return intern::string<C..., T{}>{};
+}
 
 #ifdef __clang__
 # pragma clang diagnostic pop
