@@ -55,12 +55,10 @@ namespace smp{
 			}
 		}
 
-
 	#endif
 		template< DeclareUniqueTag(EvalTag),
 			  class State = decltype(get_state<UseTag(EvalTag)>(0)) >
 		using Current = typename State::state;
-
 
 		// 3: Transform to Next State
 		template<class CurState, 
@@ -88,14 +86,10 @@ namespace smp{
 		template< template<class, class... > class Trans,
 			  class Args, DeclareUniqueTag(EvalTag) >
 		using Transform =  decltype(transform_impl<Trans, Args, UseTag(EvalTag)>());
-
 	};
-
 } // end of smp
 
-
 namespace list{
-
 
 	template<class T>
 	struct to_list{
@@ -118,26 +112,22 @@ namespace list{
 		template<DeclareUniqueTag(EvalTag)>
 		using Pop = typename base::template Transform<traits::type_list_pop, traits::type_list<>, EvalTag>;
 	};
-
 }
 
 namespace counter{
 	using std::size_t;
 
-	template<size_t N>
-	using Index = std::integral_constant<size_t, N>;
-		
 	template<class Cur>	
 	struct next;
 	
 	template<size_t N>
-	struct next<Index<N>>{
-		using type = Index<N+1>;
+	struct next<traits::Index<N>>{
+		using type = traits::Index<N+1>;
 	};
 
 	template<DeclareUniqueTag(Tag), size_t N=0>
-	struct Counter: smp::Msm<Tag, Index<N>>{ 
-		using base = smp::Msm<Tag, Index<N>>;
+	struct Counter: smp::Msm<Tag, traits::Index<N>>{ 
+		using base = smp::Msm<Tag, traits::Index<N>>;
 
 		template<DeclareUniqueTag(EvalTag)>
 		using Next = typename base::template Transform<next, traits::type_list<>, EvalTag>::state;

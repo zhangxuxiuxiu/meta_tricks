@@ -34,19 +34,14 @@ namespace traits{
 	template<class Ts, class Us>
 	struct type_list_concat;
 
-	template<template<class...> class List, typename... Ts, typename... Us>
-	struct type_list_concat<List<Ts...>, List<Us...>> {
-		using type = List<Ts..., Us...>;
+	template<template<class...> class List1,template<class...> class List2, typename... Ts, typename... Us>
+	struct type_list_concat<List1<Ts...>, List2<Us...>> {
+		using type = List1<Ts..., Us...>;
 	};
 
 	// type_list_append
 	template<class Ts, class... Args>
-	struct type_list_append;
-
-	template<template<class...> class List, class... Ts, class... Args>
-	struct type_list_append<List<Ts...>, Args...>{
-      		using type = List<Ts..., Args...>;
-	};
+	using type_list_append = type_list_concat<Ts, type_list<Args...>>;
 
 	// type_list_pop
 	template<class Ts>
@@ -62,45 +57,48 @@ namespace traits{
 		using type = typename type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >::type;
 	};
 
+	// list2seq
+	template<size_t N>
+	using Index = std::integral_constant<size_t, N>;
+
+	template<class Seq>
+	struct to_list;
+
+	template<template<class T, T... > class Seq, size_t... Is>
+	struct to_list<Seq<size_t, Is...>>{
+		using type = type_list<Index<Is>...>;	
+	};
+
+	template<class List>
+	struct to_seq;
+
+	template<template<class...> class List, class... Is>
+	struct to_seq<List<Is...>>{
+		using type = std::index_sequence<Is::value...>;	
+	};
+
+	template<template<class...> class ListOp, class... Args>
+	struct list2seq{
+		using type = typename to_seq< typename ListOp< typename to_list<Args>::type... >::type >::type;
+	};
+
 	// index_concat
-	template<class, class>
-	struct index_concat;
-
-	template<size_t... Is, size_t... Js>
-	struct index_concat<std::index_sequence<Is...>, std::index_sequence<Js...>>{
-		using type = std::index_sequence<Is..., Js...>;
-	};
-
-	// index_push
-	template<class Seq>
-	struct index_push;
-
-	template<size_t... Is>
-	struct index_push<std::index_sequence<Is...>>{
-		using type = std::index_sequence<Is..., sizeof...(Is)>;
-	};
-
-	// index_pop
-	template<class Seq>
-	struct index_pop;
-
-	template<size_t J>
-	struct index_pop<std::index_sequence<J>>{
-		using type = std::index_sequence<>;
-	};
-
-	template<size_t J, size_t... Is>
-	struct index_pop<std::index_sequence<J, Is...>>{
-		using type = typename index_concat<std::index_sequence<J>, typename index_pop<std::index_sequence<Is...>>::type >::type;
-	};
+	template<class A, class B>
+	using index_concat = list2seq<type_list_concat, A, B>;
 
 	// empty_of
 	template<template<size_t...> class Seq, size_t... Is>
-	struct empty_of<Seq<Is...>>{
-		using type = Seq<>;
-	};
+	struct empty_of<Seq<Is...>> : list2seq<empty_of, Seq<Is...>>{};
 
 	// size_of
 	template<template<size_t...> class Seq, size_t... Is>
-	struct size_of<Seq<Is...>> : std::integral_constant< size_t, sizeof...(Is) >{};
+	struct size_of<Seq<Is...>> : Index< sizeof...(Is) >{};
+
+	// index_push
+	template<class Seq>
+	using index_push = list2seq< type_list_concat, Seq, std::index_sequence<size_of<Seq>::value> >;
+
+	// index_pop
+	template<class Seq>
+	using index_pop = list2seq<type_list_pop, Seq>;
 }
