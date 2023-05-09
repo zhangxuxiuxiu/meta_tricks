@@ -64,8 +64,8 @@ namespace traits{
 	template<class Seq>
 	struct to_list;
 
-	template<template<class T, T... > class Seq, size_t... Is>
-	struct to_list<Seq<size_t, Is...>>{
+	template<template<class T, T... > class Seq, class U, U... Is>
+	struct to_list<Seq<U, Is...>>{
 		using type = type_list<Index<Is>...>;	
 	};
 
