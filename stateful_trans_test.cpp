@@ -33,7 +33,7 @@ int main(){
 	static_assert( std::is_same< all_same_t<int,int>, int>::value);
 
 //      TODO detect error
-//	static_assert( detect< all_same_t, int, int>::value);
+	static_assert( detect< all_same_t, int, int>::value);
 //	static_assert( !detect< all_same_t, float, int>::value);
 
 	static_assert( std::is_same< typename all_same< type_list<int,int, float>, std::is_integral>::type, int>::value);

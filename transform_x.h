@@ -6,7 +6,6 @@
 
 namespace traits{
 
-#if !defined(NO_TRANSFORM_X)
 	/*
 	 * typename Trans::fn<State, T>::type is a State
 	 * each State has optional bool value (emit, cont, okeof) and an optional type named type
@@ -25,7 +24,8 @@ namespace traits{
 	TRANS_STATE_VALUE(emit)
 	TRANS_STATE_VALUE(cont)
 	TRANS_STATE_VALUE(okeof)
-	
+#undef TRANS_STATE_VALUE	
+
 	// transform_x
 	template< class Trans, class State, class Ts>
 	struct transform_x;
@@ -57,13 +57,11 @@ namespace traits{
 	template< class Trans, class BaseState, class... Ts>		
 	using transform_x_t = typename transform_x< Trans, BaseState, type_list<Ts...> >::type;
 	
-	template<class Base, bool Emit=true, bool OkEof = true>
+	template<class Base, bool Emit=true, bool OkEof = true, bool Cont = true>
 	struct transform_x_state {
 		using type = Base;	
 		static constexpr bool emit  = Emit;
 		static constexpr bool okeof = OkEof;
+		static constexpr bool cont  = Cont;
 	};
-
-#endif
-
 }

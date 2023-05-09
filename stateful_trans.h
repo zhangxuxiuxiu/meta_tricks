@@ -31,12 +31,8 @@ namespace traits{
 	struct all_same_trans {
 		template<class State, class T>
 		struct fn{
-			using next_state = struct X{ 
-				using type = T; 
-				static constexpr bool cont = std::is_same<typename State::type, type>::value || !emit<State>(); 
-			};
-			// fail early
-			using type = typename std::enable_if< next_state::cont, next_state>::type;
+			static constexpr bool cont = std::is_same<typename State::type, T>::value || !emit<State>();
+			using type = transform_x_state<T, cont, cont, cont>; 
 		};
 	};
 
@@ -68,22 +64,8 @@ namespace traits{
 	struct nth_element_trans{
 		template<class State, class T>
 		struct fn{
-			template<class, class=void>
-			struct Z : std::false_type {
-				using type = T;
-			};
-
-			template<size_t M>	
-			struct Z< Index<M>, typename std::enable_if<(M<N)>::type > : std::true_type{
-				using type = Index<M+1>; 	
-			};
-
-			using type = struct X {
-				using sfinae = Z<typename State::type>;
-				using type = typename sfinae::type;
-				static constexpr bool cont  = sfinae::value; 
-				static constexpr bool okeof = false;
-			};
+			static constexpr size_t M = State::type::value;
+			using type = transform_x_state< typename std::conditional<(M<N), Index<M+1>, T>::type, true, false, (M<N) >;
 		};
 	};
 
