@@ -3,6 +3,8 @@
 #include <type_traits> 	// integral_constant
 #include <utility>	// index_sequence
 
+#include "traits.h"
+
 namespace traits{
 
 	// list operations
@@ -14,9 +16,9 @@ namespace traits{
 	struct empty_of;
 
 	template<template<class...> class List, class... Ts>
-	struct empty_of<List<Ts...>>{
-		using type = List<>;
-	};
+	struct empty_of<List<Ts...>> : sub_type< List<> >{};
+//		using type = List<>;
+//	};
 
 	template<class Ts>
 	using empty_of_t = typename empty_of<Ts>::type;
@@ -35,9 +37,7 @@ namespace traits{
 	struct type_list_concat;
 
 	template<template<class...> class List1,template<class...> class List2, typename... Ts, typename... Us>
-	struct type_list_concat<List1<Ts...>, List2<Us...>> {
-		using type = List1<Ts..., Us...>;
-	};
+	struct type_list_concat<List1<Ts...>, List2<Us...>> : sub_type < List1<Ts..., Us...> > {};
 
 	// type_list_append
 	template<class Ts, class... Args>
@@ -48,14 +48,10 @@ namespace traits{
 	struct type_list_pop;
 
 	template<template<class...> class List, class T>
-	struct type_list_pop<List<T>>{
-		using type = List<>;
-	};
+	struct type_list_pop< List<T> > : sub_type < List<> >{};
 
 	template<template<class...> class List, class U, class... Ts>
-	struct type_list_pop<List<U, Ts...>>{
-		using type = typename type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >::type;
-	};
+	struct type_list_pop<List<U, Ts...>> : type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >{};
 
 	// list2seq
 	template<size_t N>
@@ -65,22 +61,16 @@ namespace traits{
 	struct to_list;
 
 	template<template<class T, T... > class Seq, class U, U... Is>
-	struct to_list<Seq<U, Is...>>{
-		using type = type_list<Index<Is>...>;	
-	};
+	struct to_list<Seq<U, Is...>>  : sub_type< type_list<Index<Is>...> > {};	
 
 	template<class List>
 	struct to_seq;
 
 	template<template<class...> class List, class... Is>
-	struct to_seq<List<Is...>>{
-		using type = std::index_sequence<Is::value...>;	
-	};
+	struct to_seq<List<Is...>> : sub_type < std::index_sequence<Is::value...> > {};	
 
 	template<template<class...> class ListOp, class... Args>
-	struct list2seq{
-		using type = typename to_seq< typename ListOp< typename to_list<Args>::type... >::type >::type;
-	};
+	struct list2seq : to_seq< typename ListOp< typename to_list<Args>::type... >::type >{};
 
 	// index_concat
 	template<class A, class B>

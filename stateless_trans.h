@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits> // enable_if, false_type
+#include "traits.h"
 
 namespace traits{
 
@@ -12,9 +13,7 @@ namespace traits{
 	template<>
 	struct stateless_trans_filter<>{
 		template<class T>
-		struct fn{
-			using type = T;
-		};
+		struct fn : sub_type<T>{};
 	};
 
 	template<class Tran, class... Urans>

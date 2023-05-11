@@ -5,6 +5,7 @@
 #include "type_list.h"
 #include "stateless_trans.h"
 #include "transform_x.h"
+#include "traits.h"
 
 namespace traits{
 
@@ -45,9 +46,7 @@ namespace traits{
 	// transform
 	struct transform_trans{
 		template< class State, class T>
-		struct fn {
-			using type = type_list_append< typename State::type, T >;	
-		};
+		struct fn : sub_type < type_list_append< typename State::type, T > > {};	
 	};
 
 	template<class Ts, template<class> class... Trans>
@@ -57,9 +56,6 @@ namespace traits{
 	using transform_t = typename transform< type_list<Ts...>, Trans >::type; 
 	
 	// nth_element
-	template<size_t N>
-	using Index = std::integral_constant<size_t, N>;
-
 	template<size_t N>
 	struct nth_element_trans{
 		template<class State, class T>
@@ -81,9 +77,7 @@ namespace traits{
 
 	struct index_trans{
 		template< class State, class T>
-		struct fn {
-			using type = type_list_append< typename State::type, IndexedType< size_of<typename State::type>::value, T > >;	
-		};
+		struct fn : sub_type < type_list_append< typename State::type, IndexedType< size_of<typename State::type>::value, T > > > {};	
 	};
 
 	template<class Ts, template<class> class... Trans>

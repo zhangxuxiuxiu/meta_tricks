@@ -32,9 +32,7 @@ namespace unpack{
 	};
 
 	template<class T>
-	struct subs_host {
-		using type = typename T::host_type;
-	};
+	struct subs_host : traits::sub_type< typename T::host_type > {};
 
 	template<class... FieldDefines>
 	struct Fields {

@@ -6,6 +6,7 @@
 
 #include "injector.h"
 #include "type_list.h"
+#include "traits.h"
 
 namespace smp{
 
@@ -92,14 +93,10 @@ namespace smp{
 namespace list{
 
 	template<class T>
-	struct to_list{
-		using type  = traits::type_list<T>;
-	};
+	struct to_list : traits::sub_type < traits::type_list<T> > {};
 
 	template<class... Args>
-	struct to_list<traits::type_list<Args...>>{
-		using type = traits::type_list<Args...>;
-	};
+	struct to_list<traits::type_list<Args...>> : traits::sub_type < traits::type_list<Args...> > {};
 
 	template<DeclareUniqueTag(Tag), class InitialState = traits::type_list<>>
 	struct MetaList : smp::Msm<Tag, InitialState>{ 
@@ -118,13 +115,8 @@ namespace counter{
 	using std::size_t;
 
 	template<class Cur>	
-	struct next;
+	struct next : traits::sub_type< traits::Index<Cur::value+1> >{};
 	
-	template<size_t N>
-	struct next<traits::Index<N>>{
-		using type = traits::Index<N+1>;
-	};
-
 	template<DeclareUniqueTag(Tag), size_t N=0>
 	struct Counter: smp::Msm<Tag, traits::Index<N>>{ 
 		using base = smp::Msm<Tag, traits::Index<N>>;

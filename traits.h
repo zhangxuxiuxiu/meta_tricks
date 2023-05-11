@@ -33,4 +33,9 @@ namespace traits{
 		using type = T; 
 	};
 
+	// sub_type
+	template<class T>
+	struct sub_type {
+		using type = T;
+	};
 }
