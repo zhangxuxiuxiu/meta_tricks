@@ -15,12 +15,12 @@ namespace traits{
 	struct stateful_trans{
 		template<class State, class T>
 		struct fn{
-			// case 1: Tran is a filter, filter return false
-			template<class Tn, class = void>
-			struct X : StatefulTrans::template fn< State, typename Tn::type >::type{};
-
 			// case 2: Tran is a filter and filter return true, then stateless_trans_generic return Tn that Tn::type==T 
 			// case 3: Tran is a normal transformation
+			template<class Tn, class = void>
+			struct X : StatefulTrans::template fn< State, typename Tn::type >::type{};
+			
+			// case 1: Tran is a filter, filter return false
 			template<class Tn>
 			struct X< Tn, typename std::enable_if<!Tn::value>::type > : transform_x_state<void, false, okeof<State>()>{};
 
