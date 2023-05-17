@@ -17,8 +17,6 @@ namespace traits{
 
 	template<template<class...> class List, class... Ts>
 	struct empty_of<List<Ts...>> : sub_type< List<> >{};
-//		using type = List<>;
-//	};
 
 	template<class Ts>
 	using empty_of_t = typename empty_of<Ts>::type;
