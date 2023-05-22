@@ -19,16 +19,16 @@ namespace traits{
 	template<class Tran, class... Urans>
 	struct stateless_trans_filter<Tran, Urans...>{
 		// Tran is a normal transformation
-		template<class T, class Tn =typename Tran::template fn<T>, class = bool>
+		template<class T, class Tn =typename Tran::template fn<T>, class = void>
 		struct fn : stateless_trans_filter<Urans...>::template fn<typename Tn::type>{};
 
 		// Tran is a filter, filter return true 
 		template<class T, class Tn>
-		struct fn<T, Tn, typename std::enable_if<Tn::value,bool>::type> : stateless_trans_filter<Urans...>::template fn<T>{};
+		struct fn<T, Tn, typename std::enable_if<Tn::value>::type> : stateless_trans_filter<Urans...>::template fn<T>{};
 
 		// Tran is a filter, filter return false 
 		template<class T, class Tn>
-		struct fn<T, Tn, typename std::enable_if<!Tn::value,bool>::type> : std::false_type{};
+		struct fn<T, Tn, typename std::enable_if<!Tn::value>::type> : std::false_type{};
 	};
 
 	template<template<class > class Tran>
