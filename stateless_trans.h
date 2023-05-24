@@ -33,12 +33,10 @@ namespace traits{
 
 	template<template<class > class Tran>
 	struct make_trans_filter{
-		using type = struct X {
-			template<class T>
-			struct fn : Tran<T>{};
-		};
+		template<class T>
+		struct fn : Tran<T>{};
 	};
 
 	template<template<class> class... Trans> 
-	using stateless_trans_filter_z = stateless_trans_filter< typename make_trans_filter<Trans>::type... >;
+	using stateless_trans_filter_z = stateless_trans_filter< make_trans_filter<Trans>... >;
 }
