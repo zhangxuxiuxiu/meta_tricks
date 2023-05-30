@@ -8,10 +8,7 @@ namespace traits{
 	// stateless_trans to support chain multiple stateless trans as a stateless trans
 	// typename stateless_trans::template fn<T> is a type with either a sub type to indicate a transform or a sub value to indicate a filter 
 	template< class... Trans>
-	struct stateless_trans_filter;
-
-	template<>
-	struct stateless_trans_filter<>{
+	struct stateless_trans_filter{
 		template<class T>
 		struct fn : sub_type<T>{};
 	};
