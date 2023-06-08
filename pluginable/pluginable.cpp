@@ -2,11 +2,11 @@
 
 #include <boost/dll/shared_library.hpp>
 #include <boost/dll/library_info.hpp>
-#include <iostream>
 
 namespace dynamic{
 
-	void LoadAllPlugin(std::vector<std::string> const& dylibNames){
+	std::vector<Pluginable*>  AllPlugins(std::vector<std::string> const& dylibNames){
+		std::vector<Pluginable*> plugins;
 		for(auto dylibName : dylibNames){
 			// Class `library_info` can extract information from a library
 			boost::dll::library_info inf(dylibName);
@@ -16,10 +16,11 @@ namespace dynamic{
 			// Loading library and importing symbols from it
 			boost::dll::shared_library lib(dylibName);
 			for (std::size_t j = 0; j < exports.size(); ++j) {
-				std::cout << exports[j] << ".Load() = [ " << lib.get_alias<Pluginable>( exports[j] ).Load() << " ]\n"; 
+				plugins.push_back( &(lib.get_alias<Pluginable>( exports[j] ) ) );	
 			}
 		}
 
+		return plugins;
 	}
 
 }

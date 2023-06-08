@@ -27,7 +27,9 @@ int main(int argc,char* argv[]){
 		std::cout << "libname: " << dylibs[i] << '\n';
 	}
 
-	dynamic::LoadAllPlugin(dylibs);
+	for(auto p : dynamic::AllPlugins(dylibs) ){
+		std::cout << p->Load() << "\n"; 
+	}
 
 	return 0;
 }

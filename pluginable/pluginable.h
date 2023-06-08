@@ -13,7 +13,8 @@ namespace dynamic{
 			virtual	std::string Load()=0;
 	};
 
-	void LoadAllPlugin(std::vector<std::string> const& dylibNames);
+	
+	std::vector<Pluginable*> AllPlugins(std::vector<std::string> const& dylibNames);
 
 }
 
