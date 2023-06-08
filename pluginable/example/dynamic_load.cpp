@@ -1,4 +1,5 @@
 #include "pluginable.h"
+#include "../plugin_loader.h"
 
 #include <vector>
 #include <iostream>
@@ -27,7 +28,7 @@ int main(int argc,char* argv[]){
 		std::cout << "libname: " << dylibs[i] << '\n';
 	}
 
-	for(auto p : dynamic::AllPlugins(dylibs) ){
+	for(auto p : dynamic::AllPlugins<dynamic::Pluginable>(dylibs, BOOST_PP_STRINGIZE( PLUGIN_SECTION_NAME ) ) ){
 		std::cout << p->Load() << "\n"; 
 	}
 

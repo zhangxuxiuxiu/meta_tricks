@@ -3,8 +3,9 @@
 #define PLUGIN_SECTION_NAME abner 
 
 #include <string>
-#include <vector>
+//#include <vector>
 #include <boost/config.hpp>
+//#include <boost/shared_ptr.hpp>
 
 namespace dynamic{
 
@@ -14,7 +15,7 @@ namespace dynamic{
 	};
 
 	
-	std::vector<Pluginable*> AllPlugins(std::vector<std::string> const& dylibNames);
+//	std::vector<boost::shared_ptr<Pluginable>> AllPlugins(std::vector<std::string> const& dylibNames, std::string const& sectName);
 
 }
 
