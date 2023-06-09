@@ -7,13 +7,6 @@
 
 namespace dynamic{
 
-	struct shared_library_deleter {
-		boost::shared_ptr<boost::dll::shared_library> shared_lib;
-
-		template<class PluginApi>
-		void operator()(PluginApi* plugin) const noexcept{}
-	};
-
 	template<class PluginApi>
 	std::vector<boost::shared_ptr<PluginApi>>  AllPlugins(std::vector<std::string> const& dylibNames, std::string const& sectName){
 		std::vector<boost::shared_ptr<PluginApi>> plugins;
@@ -28,7 +21,8 @@ namespace dynamic{
 			// Loading library and importing symbols from it
 			auto lib = boost::make_shared<boost::dll::shared_library>( dylibName );
 			for (std::size_t j = 0; j < exports.size(); ++j) {
-				plugins.push_back( boost::shared_ptr<PluginApi>( &(lib->get_alias<PluginApi>( exports[j] ) ), shared_library_deleter{lib} ) );	
+				// each plugin adds one reference cnt to $lib to keep $lib unloaded so that the plugin is valid
+				plugins.push_back( boost::shared_ptr<PluginApi>( lib, &(lib->get_alias<PluginApi>( exports[j] )) ) );
 			}
 		}
 
