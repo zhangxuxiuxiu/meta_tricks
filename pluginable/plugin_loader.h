@@ -21,12 +21,12 @@ namespace dynamic{
 			// Loading library and importing symbols from it
 			auto lib = boost::make_shared<boost::dll::shared_library>( dylibName );
 			for (std::size_t j = 0; j < exports.size(); ++j) {
-				// each plugin adds one reference cnt to $lib to keep $lib unloaded so that the plugin is valid
-				plugins.push_back( boost::shared_ptr<PluginApi>( lib, &(lib->get_alias<PluginApi>( exports[j] )) ) );
+				// each plugin adds one reference cnt to $lib to keep $lib from being unloaded so that the plugin is valid
+				plugins.push_back( boost::shared_ptr<PluginApi>( lib, lib->get<PluginApi*>( exports[j] )) );
 			}
 		}
 
-		return plugins;
+		return std::move(plugins);
 	}
 
 }
