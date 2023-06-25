@@ -32,5 +32,21 @@ int main(int argc,char* argv[]){
 		std::cout << p->Load() << "\n"; 
 	}
 
+
+	for(auto const& dylibName : dylibs){
+		boost::dll::library_info inf(dylibName);
+		std::vector<std::string> sections= inf.sections(); 
+		std::cout << dylibName << " info as follows:\n";
+		for(auto& sect : sections){
+			std::cout << "sect:\t" << sect << '\n';
+			for(auto& sym: inf.symbols(sect)){ 
+				std::cout << "sym:\t\t" << sym << '\n';
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+
 	return 0;
 }

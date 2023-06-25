@@ -7,4 +7,7 @@ all: dll1 dll2 dynamic_load.cpp ../plugin_loader.h
 	./dyload ./*.dylib
 
 clear:
-	rm -r *.dylib *.dSYM ./dyload
+	[[ ! -f ./libplugin_one.dylib ]]  || rm libplugin_one.dylib 
+	[[ ! -f ./libplugin_two.dylib ]]  || rm libplugin_two.dylib 
+	[[ ! -f ./dyload ]]  || rm ./dyload 
+	[[ ! -d ./dyload.dSYM ]]  || rm -r ./dyload.dSYM 
