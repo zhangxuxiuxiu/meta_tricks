@@ -85,6 +85,11 @@ struct Gendered{
 template<class... Bases>
 struct Composer : Bases... {};
 
+template<class... Bases>
+auto MakeComposer(Bases&&... bases){
+	return Composer<Bases...>{ std::forward<Bases>(bases)... };
+}
+
 template<class Orders, class... Attrs>
 struct ProfileBuilder{
 		std::tuple<Attrs...> attrs;
@@ -122,7 +127,7 @@ struct ProfileBuilder{
 
 		template<class... Is>
 		auto helpBuild(std::tuple<Is...>){ 
-			return Composer{ buildAttr<Is::bit>(std::get<Is::index>(attrs))... }; 
+			return MakeComposer( buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
 		}
 
 		auto Build(){ 
