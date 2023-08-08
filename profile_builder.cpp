@@ -30,24 +30,32 @@ struct indexed{
 	static constexpr size_t bit = Bit;
 };
 
-template<class A, class B>
-struct concat_index;
+//template<class A, class B>
+//struct concat_index;
+//
+//template<class... As, class... Bs>
+//struct concat_index< std::tuple<As...>, std::tuple<Bs...> >{
+//	using type = std::tuple<As..., indexed< (Bs::index+sizeof...(As)), Bs::bit>...>;
+//};
 
-template<class... As, class... Bs>
-struct concat_index< std::tuple<As...>, std::tuple<Bs...> >{
-	using type = std::tuple<As..., indexed< (Bs::index+sizeof...(As)), Bs::bit>...>;
+template<class A, class B>
+struct concat;
+
+template<template<class...> class Seq, class... As, class... Bs>
+struct concat< Seq<As...>, Seq<Bs...> >{
+	using type = Seq<As..., Bs...>;
 };
 
-template<class S>
+template<class S, size_t Start=0>
 struct make_index;
 
-template<>
-struct make_index<Seq<>>{
+template<template<size_t...> class ISeq, size_t Start>
+struct make_index<ISeq<>,Start>{
 	using type = std::tuple<>;
 };
 
-template<size_t I, size_t... Js>
-struct make_index<Seq<I, Js...>> : concat_index<  std::tuple< indexed<0,I> >, typename make_index< Seq<Js...> >::type >{};
+template<template<size_t...> class ISeq, size_t Start, size_t I, size_t... Js>
+struct make_index<ISeq<I, Js...>, Start> : concat<  std::tuple< indexed<Start,I> >, typename make_index< Seq<Js...>, Start+1 >::type >{};
 
 // start of profiler
 constexpr static size_t s_age_bit	= 0x1 << 0; // adult or children 
