@@ -51,6 +51,32 @@ namespace traits{
 	template<template<class...> class List, class U, class... Ts>
 	struct type_list_pop<List<U, Ts...>> : type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >{};
 
+	// index_of
+	template<class Seq, class T>
+	struct index_of;
+	
+	template<template<class...> class List, class T>
+	struct index_of<List<>,T> : std::integral_constant<int, -1>{};
+	
+	template<template<class...> class List, class T, class U, class... Ks>
+	struct index_of<List<U, Ks...>,T> : std::integral_constant<int, std::is_same<T,U>::value?0:(index_of<List<Ks...>,T>::value==-1?-1:1+index_of<List<Ks...>,T>::value)>{};
+
+	// index_list
+	template<size_t Index, class T>
+	struct indexed_type{
+		static constexpr size_t index= Index;
+		using type = T;
+	};
+
+	template<class List, size_t Start=0>
+	struct index_list;	
+	
+	template<template<class...>class List, size_t Start>	
+	struct index_list<List<>, Start> : sub_type<List<>>{};
+
+	template<template<class...>class List, size_t Start, class T, class... Us >	
+	struct index_list<List<T, Us...>, Start> : type_list_concat< List<indexed_type<Start,T>>, typename index_list<List<Us...>, Start+1>::type >{};
+
 	// list2seq
 	template<size_t N>
 	using Index = std::integral_constant<size_t, N>;
@@ -83,8 +109,8 @@ namespace traits{
 	struct size_of<Seq<Is...>> : Index< sizeof...(Is) >{};
 
 	// index_push
-	template<class Seq>
-	using index_push = list2seq< type_list_concat, Seq, std::index_sequence<size_of<Seq>::value> >;
+	template<class Seq, size_t V=size_of<Seq>::value>
+	using index_push = list2seq< type_list_concat, Seq, std::index_sequence<V> >;
 
 	// index_pop
 	template<class Seq>

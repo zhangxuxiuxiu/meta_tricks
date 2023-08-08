@@ -3,51 +3,7 @@
 #include <string>
 #include <tuple>
 
-// meta fn
-template<size_t... Is>
-struct Seq{};
-
-template<class Seq, size_t I>
-struct index_of;
-
-template<size_t I>
-struct index_of<Seq<>,I> : std::integral_constant<int, -1>{};
-
-template<size_t I, size_t J, size_t... Ks>
-struct index_of<Seq<J, Ks...>,I> : std::integral_constant<int, I==J?0:(index_of<Seq<Ks...>,I>::value==-1?-1:1+index_of<Seq<Ks...>,I>::value)>{};
-
-template<class Seq, size_t I>
-struct push_back;
-
-template<template<size_t...>class Seq, size_t I, size_t... Js>
-struct push_back<Seq<Js...>, I>{
-	using type = Seq<Js..., I>;
-};
-
-template<size_t Index, size_t Bit>
-struct indexed{
-	static constexpr size_t index = Index;
-	static constexpr size_t bit = Bit;
-};
-
-template<class A, class B>
-struct concat;
-
-template<template<class...> class Seq, class... As, class... Bs>
-struct concat< Seq<As...>, Seq<Bs...> >{
-	using type = Seq<As..., Bs...>;
-};
-
-template<class S, size_t Start=0>
-struct make_index;
-
-template<template<size_t...> class ISeq, size_t Start>
-struct make_index<ISeq<>,Start>{
-	using type = std::tuple<>;
-};
-
-template<template<size_t...> class ISeq, size_t Start, size_t I, size_t... Js>
-struct make_index<ISeq<I, Js...>, Start> : concat<  std::tuple< indexed<Start,I> >, typename make_index< Seq<Js...>, Start+1 >::type >{};
+#include "type_list.h"
 
 // start of profiler
 constexpr static size_t s_age_bit	= 0x1 << 0; // adult or children 
@@ -91,27 +47,29 @@ auto MakeComposer(Bases&&... bases){
 	return Composer<Bases...>{ std::forward<Bases>(bases)... };
 }
 
+using namespace traits;
+
 template<class Orders, class... Attrs>
 struct ProfileBuilder{
 		std::tuple<Attrs...> attrs;
 
-		template<class S=Orders, bool B=(index_of<S,s_age_bit>::value==-1)>
-		auto SetAge(int age)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_age_bit>::type, Attrs..., int>>{
+		template<class S=Orders, bool B=(index_of<S,Index<s_age_bit>>::value==-1)>
+		auto SetAge(int age)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_age_bit>>::type, Attrs..., int>>{
 			return {std::tuple_cat(attrs, std::make_tuple(age))};
 		}
 
-		template<class S=Orders, bool B=(index_of<S,s_name_bit>::value==-1)>
-		auto SetName(std::string name)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_name_bit>::type, Attrs..., std::string>>{
+		template<class S=Orders, bool B=(index_of<S,Index<s_name_bit>>::value==-1)>
+		auto SetName(std::string name)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_name_bit>>::type, Attrs..., std::string>>{
 			return {std::tuple_cat(attrs, std::make_tuple(name))};
 		}
 
-		template<class S=Orders, bool B=(index_of<S,s_gender_bit>::value==-1)>
-		auto SetGender(bool male)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_gender_bit>::type, Attrs..., bool>>{
+		template<class S=Orders, bool B=(index_of<S,Index<s_gender_bit>>::value==-1)>
+		auto SetGender(bool male)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_gender_bit>>::type, Attrs..., bool>>{
 			return {std::tuple_cat(attrs, std::make_tuple(male))};
 		}
 
-		template<class S=Orders, bool B=std::is_same<S,Seq<>>::value>
-		auto SetId(std::string idNo)-> std::enable_if_t<B, ProfileBuilder<Seq<s_age_bit,s_name_bit,s_gender_bit>, std::tuple<int,std::string,bool>>>{
+		template<class S=Orders, bool B=size_of<S>::value==0>
+		auto SetId(std::string idNo)-> std::enable_if_t<B, ProfileBuilder<type_list<Index<s_age_bit>,Index<s_name_bit>,Index<s_gender_bit>>, std::tuple<int,std::string,bool>>>{
 			return {18,"id_name", true};
 		}
 
@@ -127,21 +85,21 @@ struct ProfileBuilder{
 		}
 
 		template<class... Is>
-		auto helpBuild(std::tuple<Is...>){ 
-			if constexpr(index_of<Orders,s_name_bit>::value==-1){
-				return MakeComposer( Anonymous{}, buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
+		auto helpBuild(type_list<Is...>){ 
+			if constexpr(index_of<Orders,Index<s_name_bit>>::value==-1){
+				return MakeComposer( Anonymous{}, buildAttr<Is::type::value>(std::get<Is::index>(attrs))... ); 
 			} else {
-				return MakeComposer( buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
+				return MakeComposer( buildAttr<Is::type::value>(std::get<Is::index>(attrs))... ); 
 			}
 		}
 
 		auto Build(){ 
-			return helpBuild( typename make_index<Orders>::type{} );
+			return helpBuild( typename index_list<Orders>::type{} );
 		}
 
 };
 
-ProfileBuilder<Seq<>> InitProfile(){
+ProfileBuilder<type_list<>> InitProfile(){
 	return {{}};
 }
 
