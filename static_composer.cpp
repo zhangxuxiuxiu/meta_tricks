@@ -54,27 +54,27 @@ struct ProfileBuilder{
 		std::tuple<Attrs...> attrs;
 
 		template<class S=Orders, bool B=(index_of<S,Index<s_age_bit>>::value==-1)>
-		auto SetAge(int age)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_age_bit>>::type, Attrs..., int>>{
+		auto SetAge(int age) const -> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_age_bit>>::type, Attrs..., int>> {
 			return {std::tuple_cat(attrs, std::make_tuple(age))};
 		}
 
 		template<class S=Orders, bool B=(index_of<S,Index<s_name_bit>>::value==-1)>
-		auto SetName(std::string name)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_name_bit>>::type, Attrs..., std::string>>{
+		auto SetName(std::string name) const -> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_name_bit>>::type, Attrs..., std::string>>{
 			return {std::tuple_cat(attrs, std::make_tuple(name))};
 		}
 
 		template<class S=Orders, bool B=(index_of<S,Index<s_gender_bit>>::value==-1)>
-		auto SetGender(bool male)-> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_gender_bit>>::type, Attrs..., bool>>{
+		auto SetGender(bool male) const -> std::enable_if_t<B, ProfileBuilder<typename type_list_append<S,Index<s_gender_bit>>::type, Attrs..., bool>> {
 			return {std::tuple_cat(attrs, std::make_tuple(male))};
 		}
 
 		template<class S=Orders, bool B=size_of<S>::value==0>
-		auto SetId(std::string idNo)-> std::enable_if_t<B, ProfileBuilder<type_list<Index<s_age_bit>,Index<s_name_bit>,Index<s_gender_bit>>, std::tuple<int,std::string,bool>>>{
+		auto SetId(std::string idNo) const -> std::enable_if_t<B, ProfileBuilder<type_list<Index<s_age_bit>,Index<s_name_bit>,Index<s_gender_bit>>, std::tuple<int,std::string,bool>>> {
 			return {18,"id_name", true};
 		}
 
 		template<size_t Bit, class Attr>
-		auto buildAttr(Attr attr){
+		auto buildAttr(Attr attr) const{
 			if constexpr(Bit == s_age_bit){
 				return Aged{ .age = attr}; 
 			} else if constexpr(Bit == s_name_bit){
@@ -85,7 +85,7 @@ struct ProfileBuilder{
 		}
 
 		template<class... Is>
-		auto helpBuild(type_list<Is...>){ 
+		auto helpBuild(type_list<Is...>) const{ 
 			if constexpr(index_of<Orders,Index<s_name_bit>>::value==-1){
 				return MakeComposer( Anonymous{}, buildAttr<Is::type::value>(std::get<Is::index>(attrs))... ); 
 			} else {
@@ -93,18 +93,15 @@ struct ProfileBuilder{
 			}
 		}
 
-		auto Build(){ 
+		auto Build() const{ 
 			return helpBuild( typename index_list<Orders>::type{} );
 		}
 
 };
 
-ProfileBuilder<type_list<>> InitProfile(){
-	return {{}};
-}
+static constexpr ProfileBuilder<type_list<>> builder;
 
 int main(){
-	auto builder = InitProfile();
 	{
 		auto p1 = builder.SetAge(3).Build();
 		static_assert(std::is_same<decltype(p1), Composer<Anonymous, Aged>>::value);
