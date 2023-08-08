@@ -30,14 +30,6 @@ struct indexed{
 	static constexpr size_t bit = Bit;
 };
 
-//template<class A, class B>
-//struct concat_index;
-//
-//template<class... As, class... Bs>
-//struct concat_index< std::tuple<As...>, std::tuple<Bs...> >{
-//	using type = std::tuple<As..., indexed< (Bs::index+sizeof...(As)), Bs::bit>...>;
-//};
-
 template<class A, class B>
 struct concat;
 
