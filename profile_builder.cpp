@@ -47,8 +47,9 @@ struct make_index<Seq<>>{
 };
 
 template<size_t I, size_t... Js>
-struct make_index<Seq<I, Js...>> : concat_index<  std::tuple< indexed<sizeof...(Js),I> >, typename make_index< Seq<Js...> >::type >{};
+struct make_index<Seq<I, Js...>> : concat_index<  std::tuple< indexed<0,I> >, typename make_index< Seq<Js...> >::type >{};
 
+// start of profiler
 constexpr static size_t s_age_bit	= 0x1 << 0; // adult or children 
 constexpr static size_t s_name_bit	= 0x1 << 1; // anonymous or named 
 constexpr static size_t s_gender_bit	= 0x1 << 2; // job differs
@@ -83,7 +84,7 @@ struct Gendered{
 };
 
 template<class... Bases>
-struct Composer : Bases... {};
+struct Composer : public Bases... {};
 
 template<class... Bases>
 auto MakeComposer(Bases&&... bases){
@@ -95,17 +96,17 @@ struct ProfileBuilder{
 		std::tuple<Attrs...> attrs;
 
 		template<class S=Orders, bool B=(index_of<S,s_age_bit>::value==-1)>
-		auto SetAge(int age)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_age_bit>::type, std::tuple<Attrs..., int>>>{
+		auto SetAge(int age)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_age_bit>::type, Attrs..., int>>{
 			return {std::tuple_cat(attrs, std::make_tuple(age))};
 		}
 
 		template<class S=Orders, bool B=(index_of<S,s_name_bit>::value==-1)>
-		auto SetName(std::string name)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_name_bit>::type, std::tuple<Attrs..., std::string>>>{
+		auto SetName(std::string name)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_name_bit>::type, Attrs..., std::string>>{
 			return {std::tuple_cat(attrs, std::make_tuple(name))};
 		}
 
 		template<class S=Orders, bool B=(index_of<S,s_gender_bit>::value==-1)>
-		auto SetGender(bool male)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_gender_bit>::type, std::tuple<Attrs..., bool>>>{
+		auto SetGender(bool male)-> std::enable_if_t<B, ProfileBuilder<typename push_back<S,s_gender_bit>::type, Attrs..., bool>>{
 			return {std::tuple_cat(attrs, std::make_tuple(male))};
 		}
 
@@ -127,7 +128,11 @@ struct ProfileBuilder{
 
 		template<class... Is>
 		auto helpBuild(std::tuple<Is...>){ 
-			return MakeComposer( buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
+			if constexpr(index_of<Orders,s_name_bit>::value==-1){
+				return MakeComposer( Anonymous{}, buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
+			} else {
+				return MakeComposer( buildAttr<Is::bit>(std::get<Is::index>(attrs))... ); 
+			}
 		}
 
 		auto Build(){ 
@@ -136,12 +141,62 @@ struct ProfileBuilder{
 
 };
 
-ProfileBuilder<Seq<>> Profiler(){
+ProfileBuilder<Seq<>> InitProfile(){
 	return {{}};
 }
 
 int main(){
-	auto builder = Profiler();
-	auto p1 = builder.SetAge(3).Build();
+	auto builder = InitProfile();
+	{
+		auto p1 = builder.SetAge(3).Build();
+		static_assert(std::is_same<decltype(p1), Composer<Anonymous, Aged>>::value);
+		std::cout <<p1.Name() << '\t' << p1.Age() << '\n';
+	}
+
+	{
+		auto p1 = builder.SetName("only-name").Build();
+		static_assert(std::is_same<decltype(p1), Composer<Named>>::value);
+		std::cout << p1.Name() << '\n';
+	}
+
+	{
+		auto p1 = builder.SetGender(true).Build();
+		static_assert(std::is_same<decltype(p1), Composer<Anonymous, Gendered>>::value);
+		std::cout << p1.Name() << '\t' << p1.Personality() << '\n';
+	}
+
+	{
+		auto p2 = builder.SetAge(3).SetName("age-name").Build();
+		static_assert(std::is_same<decltype(p2), Composer<Aged,Named>>::value);
+		std::cout << p2.Age() << '\t' <<  p2.Name() << '\n';
+	}
+
+	{
+		auto p2 = builder.SetAge(13).SetGender(true).Build();
+		static_assert(std::is_same<decltype(p2), Composer<Anonymous, Aged,Gendered>>::value);
+		std::cout << p2.Name() << '\t' << p2.Age() << '\t' << p2.Personality() << '\n';
+	}
+
+	{
+		auto p2 = builder.SetName("name-gender").SetGender(true).Build();
+		static_assert(std::is_same<decltype(p2), Composer<Named, Gendered>>::value);
+		std::cout << p2.Name() << '\t' <<  p2.Personality() << '\n';
+	}
+
+	{
+		auto p3 = builder.SetAge(13).SetName("age-name-gender").SetGender(false).Build();
+		static_assert(std::is_same<decltype(p3), Composer<Aged,Named,Gendered>>::value);
+		std::cout << p3.Age() << '\t' <<  p3.Name() << '\t' << p3.Personality() << '\n';
+
+		auto p4 = builder.SetName("age-name-gender").SetAge(13).SetGender(false).Build();
+		static_assert(std::is_same<decltype(p4), Composer<Named,Aged,Gendered>>::value);
+		std::cout << p4.Age() << '\t' <<  p4.Name() << '\t' << p4.Personality() << '\n';
+
+		auto p5 = builder.SetGender(false).SetAge(13).SetName("age-name-gender").Build();
+		static_assert(std::is_same<decltype(p5), Composer<Gendered,Aged,Named>>::value);
+		std::cout << p5.Age() << '\t' <<  p5.Name() << '\t' << p5.Personality() << '\n';
+	}
+
+
 	return 0;
 }
