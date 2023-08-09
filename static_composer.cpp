@@ -69,8 +69,8 @@ struct ProfileBuilder{
 		}
 
 		template<class S=Orders, bool B=size_of<S>::value==0>
-		auto SetId(std::string idNo) const -> std::enable_if_t<B, ProfileBuilder<type_list<Index<s_age_bit>,Index<s_name_bit>,Index<s_gender_bit>>, std::tuple<int,std::string,bool>>> {
-			return {18,"id_name", true};
+		auto SetId(std::string idNo) const -> std::enable_if_t<B, ProfileBuilder<type_list<Index<s_age_bit>,Index<s_name_bit>,Index<s_gender_bit>>, int,std::string,bool>> {
+			return {{18,"id_name", true}};
 		}
 
 		template<size_t Bit, class Attr>
@@ -150,6 +150,12 @@ int main(){
 		auto p5 = builder.SetGender(false).SetAge(13).SetName("age-name-gender").Build();
 		static_assert(std::is_same<decltype(p5), Composer<Gendered,Aged,Named>>::value);
 		std::cout << p5.Age() << '\t' <<  p5.Name() << '\t' << p5.Personality() << '\n';
+	}
+
+	{
+		auto p4 = builder.SetId("").Build();
+		static_assert(std::is_same<decltype(p4), Composer<Aged,Named,Gendered>>::value);
+		std::cout << p4.Age() << '\t' <<  p4.Name() << '\t' << p4.Personality() << '\n';
 	}
 
 
