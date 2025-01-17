@@ -1,5 +1,5 @@
 define compile
-	@for cmpl in "g++-12" "clang++" ;do for std in 14 17 20; do cmd="$${cmpl} -std=c++$${std} ./$(1)_test.cpp -o $(2)"; echo $${cmd}; eval $${cmd}; done done
+	@for cmpl in "g++" "clang++" ;do for std in 14 17 20; do cmd="$${cmpl} -std=c++$${std} ./$(1)_test.cpp -o $(2)"; echo $${cmd}; eval $${cmd}; done done
 endef
 
 

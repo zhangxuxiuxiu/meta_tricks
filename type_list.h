@@ -3,7 +3,7 @@
 #include <type_traits> 	// integral_constant
 #include <utility>	// index_sequence
 
-#if __cplusplus <=201402L
+#if __cplusplus < 201402L
 namespace std{
 	template<size_t... Is>
 	struct index_sequence{};

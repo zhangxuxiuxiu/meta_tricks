@@ -44,6 +44,8 @@ namespace unpack{
 	};
 #endif
 
+	// why injector::StateOf<Host>*=Fields* here?
+	// b' unpack_host can only be name lookuped through Fields
 	template<class Host>
 	auto Unpack(Host& obj, injector::StateOf<Host>* p=nullptr){
 		return unpack_host(obj, p);

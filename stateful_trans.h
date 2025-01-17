@@ -81,8 +81,8 @@ namespace traits{
 	};
 
 	template<class Ts, template<class> class... Trans>
-	using index_list = transform_x< stateful_trans< index_trans, stateless_trans_filter_z<Trans...> >, transform_x_state<empty_of_t<Ts>>, Ts >;
+	using index_types = transform_x< stateful_trans< index_trans, stateless_trans_filter_z<Trans...> >, transform_x_state<empty_of_t<Ts>>, Ts >;
 
 	template<class... Ts>
-	using index_list_t = typename index_list< type_list<Ts...> >::type;
+	using index_types_t = typename index_types< type_list<Ts...> >::type;
 }

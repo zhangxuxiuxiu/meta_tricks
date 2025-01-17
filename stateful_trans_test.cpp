@@ -69,9 +69,9 @@ int main(){
 //
 
 	// index list
-	static_assert( std::is_same< index_list_t<int,long>, type_list<IndexedType<0,int>, IndexedType<1,long>> >::value );
-	static_assert( std::is_same< index_list_t<>, type_list<> >::value );
-	static_assert( std::is_same< typename index_list<type_list<int, long, float>, std::is_integral, std::add_const, std::add_pointer>::type, type_list<IndexedType<0,const int*>, IndexedType<1,const long*>> >::value );
+	static_assert( std::is_same< index_types_t<int,long>, type_list<IndexedType<0,int>, IndexedType<1,long>> >::value );
+	static_assert( std::is_same< index_types_t<>, type_list<> >::value );
+	static_assert( std::is_same< typename index_types<type_list<int, long, float>, std::is_integral, std::add_const, std::add_pointer>::type, type_list<IndexedType<0,const int*>, IndexedType<1,const long*>> >::value );
 
 }
 
