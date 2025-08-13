@@ -18,6 +18,12 @@ namespace traits{
 		static constexpr bool value = impl<Sfinea>(nullptr);
 	};
 
+	template<class... Ts>
+	struct all_the_same : std::true_type{};
+	
+	template<class T, class U,class ... Ws>
+	struct all_the_same<T, U, Ws...> : std::integral_constant<bool, std::is_same<T,U>::value && all_the_same<U,Ws...>::value>{};
+
 	// identity
 	template<class T>
 	struct identity{

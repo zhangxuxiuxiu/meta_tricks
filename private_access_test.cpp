@@ -27,11 +27,18 @@ namespace unpack{ // required by clang that explicit instantiation must be in ns
 	template struct Functor<TagSum, &Private::sum>;
 	template struct Functor<TagMinus, &Private::minus>;
 #else 
-	template struct Fields<SubF<int Private::*, &Private::data>, SubF<char Private::*, &Private::str>, SubF<int Private::*, &Private::data2>>;
+//	template<class... Args>
+//	constexpr auto fieldDefine(Args... args) -> Fields<SubF<Args,args>...>;
+//	decltype( fieldDefine( &Private::data,&Private::str, &Private::data2) );
+
+//	template struct Fields<SubF<int Private::*, &Private::data>, SubF<char Private::*, &Private::str>, SubF<int Private::*, &Private::data2>>;
+	template struct Fields<SubF<decltype(&Private::data), &Private::data>, SubF<decltype(&Private::str), &Private::str>, SubF<decltype(&Private::data2), &Private::data2>>;
 	template struct Functor<TagSum, int (Private::*)() const, &Private::sum>;
 	template struct Functor<TagMinus,int (Private::*)(int ) const, &Private::minus>;
 #endif
 }
+
+typedef int (Private::*sumFn)() const;
 
 
 int main(){
@@ -44,4 +51,7 @@ int main(){
 
 	assert( 35 == unpack::TaggedFn<TagSum>(obj));
 	assert( -1 == unpack::TaggedFn<TagMinus>(obj, 10));
+	// error: 'sum' is a private member of 'Private', can only be used in template parameter
+//	sumFn sum = reinterpret_cast<sumFn>(&Private::sum);
+//	assert( 35 == (obj.*sum)() );
 }

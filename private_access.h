@@ -47,8 +47,8 @@ namespace unpack{
 	// why injector::StateOf<Host>*=Fields* here?
 	// b' unpack_host can only be name lookuped through Fields
 	template<class Host>
-	auto Unpack(Host& obj, injector::StateOf<Host>* p=nullptr){
-		return unpack_host(obj, p);
+	auto Unpack(Host& obj){
+		return unpack_host(obj, static_cast<injector::StateOf<Host>*>(nullptr));
 	}
 
 	// access private function 
@@ -61,7 +61,7 @@ namespace unpack{
 		using host_type = typename traits::member_host<decltype(Fptr)>::type; 
 	
 		template<class... Args>
-		friend auto tag_fn(host_type& obj, typename injector::Inject< Tag, Functor>::type*, Args&&... args){
+		friend auto tag_fn(host_type& obj, typename injector::Inject<Tag, Functor>::type*, Args&&... args){
 			return (obj.*Fptr)( std::forward<Args>(args)... );
 		}
 	};
