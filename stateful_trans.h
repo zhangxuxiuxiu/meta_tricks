@@ -46,7 +46,7 @@ namespace traits{
 	// transform
 	struct transform_trans{
 		template< class State, class T>
-		struct fn : sub_type < type_list_append< typename State::type, T > > {};	
+		struct fn : identity < type_list_append< typename State::type, T > > {};	
 	};
 
 	template<class Ts, template<class> class... Trans>
@@ -77,7 +77,7 @@ namespace traits{
 
 	struct index_trans{
 		template< class State, class T>
-		struct fn : sub_type < type_list_append< typename State::type, IndexedType< size_of<typename State::type>::value, T > > > {};	
+		struct fn : identity < type_list_append< typename State::type, IndexedType< size_of<typename State::type>::value, T > > > {};	
 	};
 
 	template<class Ts, template<class> class... Trans>

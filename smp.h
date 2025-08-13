@@ -93,10 +93,10 @@ namespace smp{
 namespace list{
 
 	template<class T>
-	struct to_list : traits::sub_type < traits::type_list<T> > {};
+	struct to_list : traits::identity < traits::type_list<T> > {};
 
 	template<class... Args>
-	struct to_list<traits::type_list<Args...>> : traits::sub_type < traits::type_list<Args...> > {};
+	struct to_list<traits::type_list<Args...>> : traits::identity < traits::type_list<Args...> > {};
 
 	template<DeclareUniqueTag(Tag), class InitialState = traits::type_list<>>
 	struct MetaList : smp::Msm<Tag, InitialState>{ 
@@ -115,7 +115,7 @@ namespace counter{
 	using std::size_t;
 
 	template<class Cur>	
-	struct next : traits::sub_type< traits::Index<Cur::value+1> >{};
+	struct next : traits::identity< traits::Index<Cur::value+1> >{};
 	
 	template<DeclareUniqueTag(Tag), size_t N=0>
 	struct Counter: smp::Msm<Tag, traits::Index<N>>{ 

@@ -10,7 +10,7 @@ namespace traits{
 	template< class... Trans>
 	struct stateless_trans_filter{
 		template<class T>
-		struct fn : sub_type<T>{};
+		struct fn : identity<T>{};
 	};
 
 	template<class Tran, class... Urans>

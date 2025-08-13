@@ -32,7 +32,7 @@ namespace unpack{ // required by clang that explicit instantiation must be in ns
 //	decltype( fieldDefine( &Private::data,&Private::str, &Private::data2) );
 
 //	template struct Fields<SubF<int Private::*, &Private::data>, SubF<char Private::*, &Private::str>, SubF<int Private::*, &Private::data2>>;
-	template struct Fields<SubF<decltype(&Private::data), &Private::data>, SubF<decltype(&Private::str), &Private::str>, SubF<decltype(&Private::data2), &Private::data2>>;
+	template struct Fields<SubFields<decltype(&Private::data), &Private::data>, SubFields<decltype(&Private::str), &Private::str>, SubFields<decltype(&Private::data2), &Private::data2>>;
 	template struct Functor<TagSum, int (Private::*)() const, &Private::sum>;
 	template struct Functor<TagMinus,int (Private::*)(int ) const, &Private::minus>;
 #endif

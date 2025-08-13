@@ -38,10 +38,4 @@ namespace traits{
 	struct member_host<RF T::*>{
 		using type = T; 
 	};
-
-	// sub_type
-	template<class T>
-	struct sub_type {
-		using type = T;
-	};
 }

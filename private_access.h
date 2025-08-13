@@ -23,23 +23,23 @@ namespace unpack{
 	};
 #else
 	template<class T, T... F>
-	struct SubF {
+	struct SubFields {
 		using host_type = typename traits::member_host<T>::type;
 	
-		friend auto FieldsEval(host_type& obj, SubF* ){
+		friend auto FieldsEval(host_type& obj, SubFields* ){
 			return std::forward_as_tuple(obj.*F...); 
 		}
 	};
 
 	template<class T>
-	struct subs_host : traits::sub_type< typename T::host_type > {};
+	struct sub_fields_host : traits::identity< typename T::host_type > {};
 
-	template<class... FieldDefines>
+	template<class... SubFieldDefines>
 	struct Fields {
-		using host_type = typename traits::all_same< traits::type_list<FieldDefines...>, subs_host >::type; 
+		using host_type = typename traits::all_same< traits::type_list<SubFieldDefines...>, sub_fields_host >::type; 
 	
 		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type*){ 
-			return std::tuple_cat( FieldsEval( obj, static_cast<FieldDefines* >(nullptr) )... ); 
+			return std::tuple_cat( FieldsEval( obj, static_cast<SubFieldDefines* >(nullptr) )... ); 
 		}
 	};
 #endif

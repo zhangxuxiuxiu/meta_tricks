@@ -23,7 +23,7 @@ namespace traits{
 	struct empty_of;
 
 	template<template<class...> class List, class... Ts>
-	struct empty_of<List<Ts...>> : sub_type< List<> >{};
+	struct empty_of<List<Ts...>> : identity< List<> >{};
 
 	template<class Ts>
 	using empty_of_t = typename empty_of<Ts>::type;
@@ -42,7 +42,7 @@ namespace traits{
 	struct type_list_concat;
 
 	template<template<class...> class List1,template<class...> class List2, typename... Ts, typename... Us>
-	struct type_list_concat<List1<Ts...>, List2<Us...>> : sub_type < List1<Ts..., Us...> > {};
+	struct type_list_concat<List1<Ts...>, List2<Us...>> : identity < List1<Ts..., Us...> > {};
 
 	// type_list_append
 	template<class Ts, class... Args>
@@ -53,7 +53,7 @@ namespace traits{
 	struct type_list_pop;
 
 	template<template<class...> class List, class T>
-	struct type_list_pop< List<T> > : sub_type < List<> >{};
+	struct type_list_pop< List<T> > : identity < List<> >{};
 
 	template<template<class...> class List, class U, class... Ts>
 	struct type_list_pop<List<U, Ts...>> : type_list_concat< List<U>, typename type_list_pop<List<Ts...>>::type >{};
@@ -79,7 +79,7 @@ namespace traits{
 	struct index_list;	
 	
 	template<template<class...>class List, size_t Start>	
-	struct index_list<List<>, Start> : sub_type<List<>>{};
+	struct index_list<List<>, Start> : identity<List<>>{};
 
 	template<template<class...>class List, size_t Start, class T, class... Us >	
 	struct index_list<List<T, Us...>, Start> : type_list_concat< List<indexed_type<Start,T>>, typename index_list<List<Us...>, Start+1>::type >{};
@@ -92,13 +92,13 @@ namespace traits{
 	struct to_list;
 
 	template<template<class T, T... > class Seq, class U, U... Is>
-	struct to_list<Seq<U, Is...>>  : sub_type< type_list<Index<Is>...> > {};	
+	struct to_list<Seq<U, Is...>>  : identity< type_list<Index<Is>...> > {};	
 
 	template<class List>
 	struct to_seq;
 
 	template<template<class...> class List, class... Is>
-	struct to_seq<List<Is...>> : sub_type < std::index_sequence<Is::value...> > {};	
+	struct to_seq<List<Is...>> : identity < std::index_sequence<Is::value...> > {};	
 
 	template<template<class...> class ListOp, class... Args>
 	struct list2seq : to_seq< typename ListOp< typename to_list<Args>::type... >::type >{};
