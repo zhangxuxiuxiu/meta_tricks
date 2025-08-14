@@ -8,56 +8,56 @@
 using namespace std;
 
 template<size_t N>
-struct OL : OL<N-1>{};
+struct Overload : Overload<N-1>{};
 
 template<>
-struct OL<0>{};
+struct Overload<0>{};
 
 /*
-    for all $impl that meets enable_if, the highest OL verison is choosen  
+    for all $impl that meets enable_if, the highest Overload verison is choosen  
 */
 template<class T>
 struct Dispatcher{
 
 	// lowest priority
 	template<class U>
-	static constexpr size_t impl(OL<0>){
+	static constexpr size_t impl(Overload<0>){
 		return 5;
 	}
 	
 	template<class U>
-	static constexpr size_t impl(typename enable_if< is_integral<U>::value, OL<2>>::type ){
+	static constexpr size_t impl(typename enable_if< is_integral<U>::value, Overload<2>>::type ){
 		return 4;
 	}
 	
 	template<class U>
-	static constexpr size_t impl(typename enable_if< is_same<U, float>::value, OL<4>>::type ){
+	static constexpr size_t impl(typename enable_if< is_same<U, float>::value, Overload<4>>::type ){
 		return 3;
 	}
 
 	template<class U>
-	static constexpr size_t impl(typename enable_if< is_floating_point<U>::value, OL<6>>::type ){
+	static constexpr size_t impl(typename enable_if< is_floating_point<U>::value, Overload<6>>::type ){
 		return 2;
 	}
 
 	// highest priority
 	template<class U>
-	static constexpr size_t impl(typename enable_if< is_same<U, int>::value, OL<8>>::type ){
+	static constexpr size_t impl(typename enable_if< is_same<U, int>::value, Overload<8>>::type ){
 		return 1;
 	}
 
 	template<size_t N>
 	static constexpr size_t value(){
-		return impl<T>(OL<N>{});
+		return impl<T>(Overload<N>{});
 	}
 };
 
 
 /*
-invoke the highest OL version	
+invoke the highest Overload version	
 */
 template<class U, class KeyType>
-static auto Find(U const & container, KeyType const& key, OL<2>) -> decltype(container.find(key)) {
+static auto Find(U const & container, KeyType const& key, Overload<2>) -> decltype(container.find(key)) {
 	cout << "container.find by " << key << '\n';
 	return container.find(key);
 }
@@ -65,23 +65,38 @@ static auto Find(U const & container, KeyType const& key, OL<2>) -> decltype(con
 //???: invalid to only return decltype(find(begin(container), end(container), key))
 //answer: std::find specify return type as first argument type, so decltype(std::find...) will not trigger substitution error(see FindTry test) 
 //template<class U, class KeyType> 
-//static auto Find(U const& container, KeyType const& key, OL<1>) ->typename enable_if<is_same<KeyType, typename U::value_type>::value,decltype(find(begin(container), end(container), key) )>::type {
+//static auto Find(U const& container, KeyType const& key, Overload<1>) ->typename enable_if<is_same<KeyType, typename U::value_type>::value,decltype(find(begin(container), end(container), key) )>::type {
 template<class U> 
-static auto Find(U const& container, typename U::value_type const& key, OL<1>) ->decltype(begin(container)) {
+static auto Find(U const& container, typename U::value_type const& key, Overload<1>) ->decltype(begin(container)) {
 	cout << "std::find by " << key << '\n';
 	return find(begin(container), end(container), key);
 }
 
 
 template<class U, class Predicate>
-static auto Find(U const& container, Predicate const& pred, OL<0>) -> decltype( pred(declval<typename U::value_type>()), begin(container) ) {
+static auto Find(U const& container, Predicate const& pred, Overload<0>) -> decltype( pred(declval<typename U::value_type>()), begin(container) ) {
 	cout << "std::find_if pred:" << pred << "\n";
 	return find_if(begin(container), end(container), pred);
 }
 
+template<class Iterator>
+struct FindIterator{
+	bool endPos;
+	Iterator it;
+
+	operator bool() const{ return !endPos; }
+	auto operator ->() const { return it; }
+	auto operator *() const { return *it; }
+};
+
+template<class Container, class Iterator>
+FindIterator<Iterator> MakeFindIterator(Container const& c, Iterator it){
+	return {end(c)==it, it};
+}
+
 template<class Container,class KeyType>
 static auto Find(Container const& container, KeyType const& key){
-	return Find(container, key, OL<2>{});
+	return MakeFindIterator(container, Find(container, key, Overload<2>{}) );
 }
 
 struct equal3 {
@@ -149,7 +164,7 @@ int main(){
 	vector<int> vec1 = {1,2,3};	
 	auto it = Find(vec1, 3);  // ==> std::find
 	cout << "vector got 3: " << *it << endl;
-	auto it1 = Find(vec1, 3, OL<1>{}); // ==> std::find
+	auto it1 = Find(vec1, 3, Overload<1>{}); // ==> std::find
 	cout << "vector got 3: " << *it1 << endl;
 
 	// case 2: find in map, std::find not support
@@ -161,12 +176,13 @@ int main(){
 	set<int> set1 = {1,2,3};	
 	auto it3 = Find(set1, 3); // ==> set::find
 	cout << "set got 3: " << *it3 << endl;
-	auto it4 = Find(set1, 3, OL<1>{}); // ==> std::find
+	auto it4 = Find(set1, 3, Overload<1>{}); // ==> std::find
 	cout << "set got 3: " << *it4 << endl;
 
 	// case 4: find_if
 	auto it5 = Find(vec1, equal3{});
-	cout << "vec find_if v==3: " << *it5 <<'\n';
+	if (it5) {cout << "vec find_if v==3: " << *it5 <<'\n'; }
+	
 
 	return 0;
 }
