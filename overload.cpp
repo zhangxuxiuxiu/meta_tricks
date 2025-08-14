@@ -57,23 +57,53 @@ struct Dispatcher{
 invoke the highest OL version	
 */
 template<class U, class KeyType>
-static auto Find(U const & container, KeyType const& key, OL<1>) -> decltype(container.find(key)) {
+static auto Find(U const & container, KeyType const& key, OL<2>) -> decltype(container.find(key)) {
 	cout << "container.find by " << key << '\n';
 	return container.find(key);
 }
 
-template<class U, class KeyType>
-static auto Find(U const& container, KeyType const& key, OL<0>) -> decltype( find(begin(container), end(container), key) ) {
+//???: invalid to only return decltype(find(begin(container), end(container), key))
+//answer: std::find specify return type as first argument type, so decltype(std::find...) will not trigger substitution error(see FindTry test) 
+//template<class U, class KeyType> 
+//static auto Find(U const& container, KeyType const& key, OL<1>) ->typename enable_if<is_same<KeyType, typename U::value_type>::value,decltype(find(begin(container), end(container), key) )>::type {
+template<class U> 
+static auto Find(U const& container, typename U::value_type const& key, OL<1>) ->decltype(begin(container)) {
 	cout << "std::find by " << key << '\n';
 	return find(begin(container), end(container), key);
 }
 
+
+template<class U, class Predicate>
+static auto Find(U const& container, Predicate const& pred, OL<0>) -> decltype( pred(declval<typename U::value_type>()), begin(container) ) {
+	cout << "std::find_if pred:" << pred << "\n";
+	return find_if(begin(container), end(container), pred);
+}
+
 template<class Container,class KeyType>
 static auto Find(Container const& container, KeyType const& key){
-	return Find(container, key, OL<10>{});
+	return Find(container, key, OL<2>{});
+}
+
+struct equal3 {
+	bool operator()(int v) const{
+		return v==3;
+	}	
+};
+
+ostream& operator<<( ostream& os, equal3 const& e){
+	return os << " equal to 3 ";
+}
+
+template<class U, class KeyType>
+static auto FindTry(U const& container, KeyType const& key) ->decltype(find(begin(container), end(container), key) ) {
+	cout << "std::find by " << key << '\n';
+	return find(begin(container), end(container), key);
 }
 
 int main(){
+	//FindTry(vector<int>{},equal3{}) fail, but following is ok
+	cout << typeid( decltype(FindTry(declval<vector<int>>(),equal3{})) ).name() << '\n';
+
 	static_assert( Dispatcher<int>::value<0>() == 5);
 	static_assert( Dispatcher<int>::value<1>() == 5);
 	static_assert( Dispatcher<int>::value<2>() == 4);
@@ -131,8 +161,12 @@ int main(){
 	set<int> set1 = {1,2,3};	
 	auto it3 = Find(set1, 3); // ==> set::find
 	cout << "set got 3: " << *it3 << endl;
-	auto it4 = Find(set1, 3, OL<0>{}); // ==> std::find
+	auto it4 = Find(set1, 3, OL<1>{}); // ==> std::find
 	cout << "set got 3: " << *it4 << endl;
+
+	// case 4: find_if
+	auto it5 = Find(vec1, equal3{});
+	cout << "vec find_if v==3: " << *it5 <<'\n';
 
 	return 0;
 }
