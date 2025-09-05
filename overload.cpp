@@ -115,7 +115,23 @@ static auto FindTry(U const& container, KeyType const& key) ->decltype(find(begi
 	return find(begin(container), end(container), key);
 }
 
+// int -> {long, char, short, float, double}
+string to(int){ return "int";}
+// long -> {int, char, short, float, double}
+string to(long){ return "long";}
+//LONG CONVERSION PRECEDENCE: char -> int -> {long, short, float, double} 
+string to(char){ return "char";}
+//LONG CONVERSION PRECEDENCE: short -> int -> {long, char, float, double}
+string to(short){ return "short";}
+//LONG CONVERSION PRECEDENCE: float -> double -> {int, long, char, short}
+string to(float){ return "float";}
+// double -> {int, long, char, short, float }
+string to(double){ return "double";}
+
+
 int main(){
+	cout << to(float(0.1)) << '\n' << '\n';
+
 	//FindTry(vector<int>{},equal3{}) fail, but following is ok
 	cout << typeid( decltype(FindTry(declval<vector<int>>(),equal3{})) ).name() << '\n';
 
