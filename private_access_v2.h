@@ -45,7 +45,7 @@ namespace access{								\
 	struct TagDispatcher<Tag>{						\
 		template<typename T, typename... Args>				\
 		static decltype(auto) Dispatch(T&& obj, Args&&... args){	\
-			return member::Eval(std::forward<T>(obj), MemPtrHolder<Tag,MemPtr>::value, nullptr, std::forward<Args>(args)...); \
+			return member::Eval<MemPtr>(std::forward<T>(obj), MemPtrHolder<Tag,MemPtr>::value, std::forward<Args>(args)...); \
 		}								\
 	};									\
 }

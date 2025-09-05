@@ -23,7 +23,7 @@ namespace access{
 	struct Member{
 		template<class Host, class... Args>
 		friend decltype(auto) tag_mem(typename injector::Inject<Tag, Member>::type*, Host& obj, Args&&... args){
-			return member::Eval(obj, memPtr, nullptr, std::forward<Args>(args)...);
+			return member::Eval<decltype(memPtr)>(obj, memPtr, std::forward<Args>(args)...);
 		}
 	};
 
