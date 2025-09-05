@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include "private_access_v2.h"
 
@@ -16,14 +17,16 @@ public:
 };
 
 struct Tag1 {};
-DECLARE_PRIVATE_FUNCTION(Tag1, void(A::*)(), &A::f)
+DECLARE_PRIVATE_MEMBER(Tag1, void(A::*)(), &A::f)
 struct Tag2 {};
-DECLARE_PRIVATE_FIELD(Tag2, int A::*, &A::val)
+DECLARE_PRIVATE_MEMBER(Tag2, int A::*, &A::val)
 
 int main() {
 	A a;
 	TagMem<Tag1>(a);
-//	TODO return auto&&
-//	auto& v = TagMem<Tag2>(2);// = 4;
-	std::cout << TagMem<Tag2>(a) << '\n';
+	TagMem<Tag2>(a) = 4;
+	
+	assert( TagMem<Tag2>(a) == 4);
+
+	assert( std::is_lvalue_reference<decltype(TagMem<Tag2>(a) )>::value );
 }

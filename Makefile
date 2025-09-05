@@ -15,7 +15,7 @@ stateful: ./traits.h ./stateless_trans.h ./transform_x.h ./stateful_trans.h ./in
 stateless: ./stateless_trans.h ./injector.h ./stateless_trans_test.cpp
 	$(call compile,stateless_trans,stateless)
 
-access: ./private_access.h ./private_access_v2.h ./injector.h ./private_access_test.cpp ./private_access_v2_test.cpp
+access: ./member.h ./private_access.h ./private_access_v2.h ./injector.h ./private_access_test.cpp ./private_access_v2_test.cpp
 	$(call compile,private_access,access)
 	$(call compile,private_access_v2,access_v2)
 

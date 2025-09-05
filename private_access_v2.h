@@ -2,15 +2,17 @@
 
 #include <utility>
 
+#include "member.h"
+
 namespace access{
 	template<typename Tag, typename MemPtr>
 	struct MemPtrHolder {
 		static MemPtr value;
 
-		template<MemPtr ptrValue>
+		template<MemPtr memPtr>
 		struct Initiator{
 			Initiator(){
-				value = ptrValue;
+				value = memPtr;
 			}
 			static Initiator initiator;
 		};	
@@ -20,42 +22,30 @@ namespace access{
 	MemPtr MemPtrHolder<Tag, MemPtr>::value;
 
 	template<typename Tag, typename MemPtr>
-	template<MemPtr ptrValue>
-	typename MemPtrHolder<Tag, MemPtr>::template Initiator<ptrValue> MemPtrHolder<Tag, MemPtr>::Initiator<ptrValue>::initiator;
+	template<MemPtr memPtr>
+	typename MemPtrHolder<Tag, MemPtr>::template Initiator<memPtr> MemPtrHolder<Tag, MemPtr>::Initiator<memPtr>::initiator;
 	
 	template<typename Tag>
 	struct TagDispatcher{
 		template<typename T, typename... Args>
-		static auto Dispatch(T&& obj, Args&&... args);
+		static decltype(auto) Dispatch(T&& obj, Args&&... args);
 	};
 	
 	template<typename Tag, typename T, typename... Args>
-	auto TagMem(T&& obj, Args&&... args){
+	decltype(auto) TagMem(T&& obj, Args&&... args){
 		return TagDispatcher<Tag>::Dispatch(std::forward<T>(obj), std::forward<Args>(args)...);
 	}
+
 }
 
-#define DECLARE_PRIVATE_FUNCTION( Tag, Sig, Ptr) 				\
+#define DECLARE_PRIVATE_MEMBER(Tag, MemPtr, memPtr) 				\
 namespace access{								\
-	template class MemPtrHolder< Tag, Sig>::template Initiator<Ptr>;	\
+	template class MemPtrHolder<Tag, MemPtr>::template Initiator<memPtr>;	\
 	template<>								\
 	struct TagDispatcher<Tag>{						\
 		template<typename T, typename... Args>				\
-		static auto Dispatch(T&& obj, Args&&... args){			\
-			return (obj.*MemPtrHolder<Tag,Sig>::value) (std::forward<Args>(args)...); \
+		static decltype(auto) Dispatch(T&& obj, Args&&... args){	\
+			return member::Eval(std::forward<T>(obj), MemPtrHolder<Tag,MemPtr>::value, nullptr, std::forward<Args>(args)...); \
 		}								\
 	};									\
 }
-
-#define DECLARE_PRIVATE_FIELD( Tag, Sig, Ptr) 					\
-namespace access{								\
-	template class MemPtrHolder< Tag, Sig>::template Initiator<Ptr>;	\
-	template<>								\
-	struct TagDispatcher<Tag>{						\
-		template<typename T, typename... Args>				\
-		static auto Dispatch(T&& obj, Args&&... args){			\
-			return obj.*MemPtrHolder<Tag,Sig>::value; 		\
-		}								\
-	};									\
-}
-

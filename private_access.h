@@ -8,38 +8,27 @@
 #include <tuple>
 #include <utility> //forward
 
+#include "member.h"
 #include "injector.h"
 
 namespace access{
 
+
 // access private fields
 #if __cplusplus >= 201703L
-	template<class Tag, auto ptrValue>
+	template<class Tag, auto memPtr>
 #else
-	template<class Tag, class MemPtr, MemPtr ptrValue>
+	template<class Tag, class MemPtr, MemPtr memPtr>
 #endif 
-	struct Field{
+	struct Member{
 		template<class Host, class... Args>
-		friend auto tag_mem(typename injector::Inject<Tag, Field>::type*, Host& obj, Args&&... args){
-			return obj.*ptrValue;
+		friend decltype(auto) tag_mem(typename injector::Inject<Tag, Member>::type*, Host& obj, Args&&... args){
+			return member::Eval(obj, memPtr, nullptr, std::forward<Args>(args)...);
 		}
 	};
 
-// access private function 
-#if __cplusplus >= 201703L
-	template<class Tag, auto ptrValue>
-#else
-	template<class Tag, class MemPtr, MemPtr ptrValue>
-#endif 
-	struct Functor{
-		template<class Host, class... Args>
-		friend auto tag_mem(typename injector::Inject<Tag, Functor>::type*, Host& obj, Args&&... args){
-			return (obj.*ptrValue)( std::forward<Args>(args)... );
-		}
-	};
-	
 	template<class Tag, class Host, class... Args>
-	auto TagMem(Host& obj, Args&&... args){
+	decltype(auto) TagMem(Host& obj, Args&&... args){
 		return tag_mem(static_cast<injector::StateOf<Tag>*>(nullptr), obj, std::forward<Args>(args)... );
 	}
 
