@@ -1,4 +1,7 @@
 //https://ledas.com/post/857-how-to-hack-c-with-templates-and-friends/
+//http://bloglitb.blogspot.com/2010/07/access-to-private-members-thats-easy.html
+//https://gist.github.com/altamic/d3778f906b63c6983ef074635eb36c85
+//https://github.com/dfrib/accessprivate
 
 #pragma once
 
@@ -6,40 +9,61 @@
 #include <utility> //forward
 
 #include "injector.h"
-#include "traits.h"
-#include "stateful_trans.h"
 
-namespace unpack{
+namespace access{
 
-	// access private fields
+// access private fields
 #if __cplusplus >= 201703L
-	template<auto... F>
-	struct Fields{
-		using host_type = typename traits::all_same< traits::type_list<decltype(F)...>, traits::member_host>::type;
+	template<class Tag, auto ptrValue>
+#else
+	template<class Tag, class MemPtr, MemPtr ptrValue>
+#endif 
+	struct Field{
+		template<class Host, class... Args>
+		friend auto tag_mem(typename injector::Inject<Tag, Field>::type*, Host& obj, Args&&... args){
+			return obj.*ptrValue;
+		}
+	};
+
+// access private function 
+#if __cplusplus >= 201703L
+	template<class Tag, auto ptrValue>
+#else
+	template<class Tag, class MemPtr, MemPtr ptrValue>
+#endif 
+	struct Functor{
+		template<class Host, class... Args>
+		friend auto tag_mem(typename injector::Inject<Tag, Functor>::type*, Host& obj, Args&&... args){
+			return (obj.*ptrValue)( std::forward<Args>(args)... );
+		}
+	};
 	
-		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type* ){ 
-			return std::forward_as_tuple(obj.*F...); 
+	template<class Tag, class Host, class... Args>
+	auto TagMem(Host& obj, Args&&... args){
+		return tag_mem(static_cast<injector::StateOf<Tag>*>(nullptr), obj, std::forward<Args>(args)... );
+	}
+
+// access private fields
+#if __cplusplus >= 201703L
+	template<class Host, auto... memPtrs>
+	struct Fields{
+		friend auto unpack_host(typename injector::Inject<Host, Fields>::type*, Host& obj ){ 
+			return std::forward_as_tuple(obj.*memPtrs...); 
 		}
 	};
 #else
-	template<class T, T... F>
+	template<class MemPtr, MemPtr... memPtrs>
 	struct SubFields {
-		using host_type = typename traits::member_host<T>::type;
-	
-		friend auto FieldsEval(host_type& obj, SubFields* ){
-			return std::forward_as_tuple(obj.*F...); 
+		template<class Host>
+		friend auto eval_fields(SubFields*, Host& obj){
+			return std::forward_as_tuple(obj.*memPtrs...); 
 		}
 	};
 
-	template<class T>
-	struct sub_fields_host : traits::identity< typename T::host_type > {};
-
-	template<class... SubFieldDefines>
+	template<class Host, class... SubFieldDefines>
 	struct Fields {
-		using host_type = typename traits::all_same< traits::type_list<SubFieldDefines...>, sub_fields_host >::type; 
-	
-		friend auto unpack_host(host_type& obj, typename injector::Inject<host_type, Fields>::type*){ 
-			return std::tuple_cat( FieldsEval( obj, static_cast<SubFieldDefines* >(nullptr) )... ); 
+		friend auto unpack_host(typename injector::Inject<Host, Fields>::type*, Host& obj){ 
+			return std::tuple_cat( eval_fields(static_cast<SubFieldDefines* >(nullptr), obj)... ); 
 		}
 	};
 #endif
@@ -48,26 +72,7 @@ namespace unpack{
 	// b' unpack_host can only be name lookuped through Fields
 	template<class Host>
 	auto Unpack(Host& obj){
-		return unpack_host(obj, static_cast<injector::StateOf<Host>*>(nullptr));
+		return unpack_host(static_cast<injector::StateOf<Host>*>(nullptr), obj);
 	}
 
-	// access private function 
-#if __cplusplus >= 201703L
-	template<class Tag, auto Fptr>
-#else
-	template<class Tag, class F, F Fptr>
-#endif 
-	struct Functor {
-		using host_type = typename traits::member_host<decltype(Fptr)>::type; 
-	
-		template<class... Args>
-		friend auto tag_fn(host_type& obj, typename injector::Inject<Tag, Functor>::type*, Args&&... args){
-			return (obj.*Fptr)( std::forward<Args>(args)... );
-		}
-	};
-	
-	template<class Tag, class Host, class... Args>
-	auto TaggedFn(Host& obj, Args&&... args){
-		return tag_fn(obj, static_cast<injector::StateOf<Tag>*>(nullptr), std::forward<Args>(args)... );
-	}
 }

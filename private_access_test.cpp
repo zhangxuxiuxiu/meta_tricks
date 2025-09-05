@@ -20,19 +20,17 @@ class Private {
 
 struct TagSum{};
 struct TagMinus{};
+struct TagField{};
 
-namespace unpack{ // required by clang that explicit instantiation must be in ns 
+namespace access{ // required by clang that explicit instantiation must be in ns 
 #if __cplusplus >= 201703L
-	template struct Fields<&Private::data, &Private::str, &Private::data2>;
+	template struct Fields<Private,&Private::data, &Private::str, &Private::data2>;
+	template struct Field<TagField, &Private::data>;
 	template struct Functor<TagSum, &Private::sum>;
 	template struct Functor<TagMinus, &Private::minus>;
 #else 
-//	template<class... Args>
-//	constexpr auto fieldDefine(Args... args) -> Fields<SubF<Args,args>...>;
-//	decltype( fieldDefine( &Private::data,&Private::str, &Private::data2) );
-
-//	template struct Fields<SubF<int Private::*, &Private::data>, SubF<char Private::*, &Private::str>, SubF<int Private::*, &Private::data2>>;
-	template struct Fields<SubFields<decltype(&Private::data), &Private::data>, SubFields<decltype(&Private::str), &Private::str>, SubFields<decltype(&Private::data2), &Private::data2>>;
+	template struct Fields<Private,SubFields<decltype(&Private::data), &Private::data>, SubFields<decltype(&Private::str), &Private::str>, SubFields<decltype(&Private::data2), &Private::data2>>;
+	template struct Field<TagField, decltype(&Private::data), &Private::data>;
 	template struct Functor<TagSum, int (Private::*)() const, &Private::sum>;
 	template struct Functor<TagMinus,int (Private::*)(int ) const, &Private::minus>;
 #endif
@@ -44,14 +42,16 @@ typedef int (Private::*sumFn)() const;
 int main(){
 	Private obj;
 
-	auto dup = unpack::Unpack(obj);
-	dup = std::make_tuple(12, 'c', 23);
-	assert( dup == unpack::Unpack(obj) );
+	auto dup = access::Unpack(obj);
+	auto tpl = std::make_tuple(12, 'c', 23);
+	dup = tpl; 
+	assert( tpl == access::Unpack(obj) );
 	std::cout << std::get<0>(dup) << '\t' << std::get<1>(dup) << '\t' << std::get<2>(dup) << '\n';
 
-	assert( 35 == unpack::TaggedFn<TagSum>(obj));
-	assert( -1 == unpack::TaggedFn<TagMinus>(obj, 10));
-	// error: 'sum' is a private member of 'Private', can only be used in template parameter
-//	sumFn sum = reinterpret_cast<sumFn>(&Private::sum);
-//	assert( 35 == (obj.*sum)() );
+	assert( 12 == access::TagMem<TagField>(obj));	
+	assert( 35 == access::TagMem<TagSum>(obj));
+	assert( -1 == access::TagMem<TagMinus>(obj, 10));
+	
+	//TODO provide a non-friend injection version
+	return 0;
 }
