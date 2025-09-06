@@ -10,11 +10,11 @@ namespace access{
 		static MemPtr value;
 
 		template<MemPtr memPtr>
-		struct Initiator{
-			Initiator(){
+		struct Initializer{
+			Initializer(){
 				value = memPtr;
 			}
-			static Initiator initiator;
+			static Initializer initializer;
 		};	
 	};
 	
@@ -23,7 +23,7 @@ namespace access{
 
 	template<typename Tag, typename MemPtr>
 	template<MemPtr memPtr>
-	typename MemPtrHolder<Tag, MemPtr>::template Initiator<memPtr> MemPtrHolder<Tag, MemPtr>::Initiator<memPtr>::initiator;
+	typename MemPtrHolder<Tag, MemPtr>::template Initializer<memPtr> MemPtrHolder<Tag, MemPtr>::Initializer<memPtr>::initializer;
 	
 	template<typename Tag>
 	struct TagDispatcher{
@@ -38,9 +38,10 @@ namespace access{
 
 }
 
+
 #define DECLARE_PRIVATE_MEMBER(Tag, MemPtr, memPtr) 				\
 namespace access{								\
-	template class MemPtrHolder<Tag, MemPtr>::template Initiator<memPtr>;	\
+	template class MemPtrHolder<Tag, MemPtr>::template Initializer<memPtr>;	\
 	template<>								\
 	struct TagDispatcher<Tag>{						\
 		template<typename T, typename... Args>				\
