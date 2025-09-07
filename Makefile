@@ -31,6 +31,6 @@ composer: ./type_list.h ./static_composer.cpp
 	g++ -std=c++11 static_composer.cpp -o sc
 
 clean:
-	@for bin in injector unpack stateful stateless access access_v2 smp intern sc; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
+	@for bin in injector unpack stateful stateless access access_v2 access_v3 smp intern sc; do cmd="[[ ! -e ./$${bin} ]] || rm ./$${bin}"; echo $${cmd}; eval $${cmd}; done
 
 all: injector unpack stateful stateless access smp intern clean
