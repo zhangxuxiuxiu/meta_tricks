@@ -1,3 +1,5 @@
+//https://ledas.com/post/857-how-to-hack-c-with-templates-and-friends/
+
 #pragma once
 
 #include <type_traits> // integral_constant, false_type, true_type
