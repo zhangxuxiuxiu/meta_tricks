@@ -1,5 +1,6 @@
 //https://ledas.com/post/857-how-to-hack-c-with-templates-and-friends/
 //https://github.com/dfrib/accessprivate
+//https://dfrib.github.io/a-foliage-of-folly/
 
 #pragma once
 
