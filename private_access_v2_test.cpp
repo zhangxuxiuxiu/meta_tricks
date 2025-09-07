@@ -23,10 +23,10 @@ DECLARE_PRIVATE_MEMBER(Tag2, int A::*, &A::val)
 
 int main() {
 	A a;
-	TagMem<Tag1>(a);
-	TagMem<Tag2>(a) = 4;
+	TagFunctor<Tag1>(a);
+	TagField<Tag2>(a) = 4;
 	
-	assert( TagMem<Tag2>(a) == 4);
+	assert( TagField<Tag2>(a) == 4);
 
-	assert( std::is_lvalue_reference<decltype(TagMem<Tag2>(a) )>::value );
+	assert( std::is_lvalue_reference<decltype(TagField<Tag2>(a) )>::value );
 }

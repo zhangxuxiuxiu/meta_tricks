@@ -2,10 +2,8 @@
 
 #include <utility>
 
-#include "member.h"
-
 namespace access{
-	template<typename Tag, typename MemPtr>
+	template<class Tag, class MemPtr>
 	struct MemPtrHolder {
 		static MemPtr value;
 
@@ -18,35 +16,37 @@ namespace access{
 		};	
 	};
 	
-	template<typename Tag, typename MemPtr>
+	template<class Tag, class MemPtr>
 	MemPtr MemPtrHolder<Tag, MemPtr>::value;
 
-	template<typename Tag, typename MemPtr>
+	template<class Tag, class MemPtr>
 	template<MemPtr memPtr>
-	typename MemPtrHolder<Tag, MemPtr>::template Initializer<memPtr> MemPtrHolder<Tag, MemPtr>::Initializer<memPtr>::initializer;
+	class MemPtrHolder<Tag,MemPtr>::template Initializer<memPtr> MemPtrHolder<Tag,MemPtr>::Initializer<memPtr>::initializer;
 	
-	template<typename Tag>
-	struct TagDispatcher{
-		template<typename T, typename... Args>
-		static decltype(auto) Dispatch(T&& obj, Args&&... args);
-	};
+	template<class>
+	struct TagMemPtr;
 	
-	template<typename Tag, typename T, typename... Args>
-	decltype(auto) TagMem(T&& obj, Args&&... args){
-		return TagDispatcher<Tag>::Dispatch(std::forward<T>(obj), std::forward<Args>(args)...);
+	template<class Tag, class T, class... Args>
+	decltype(auto) TagFunctor(T&& obj, Args&&... args){
+		using MemPtr = typename TagMemPtr<Tag>::type;
+		auto memPtr = MemPtrHolder<Tag, MemPtr>::value;	
+		return (obj.*memPtr) (std::forward<Args>(args)...); 
 	}
 
+	template<class Tag, class T, class... Args>
+	decltype(auto) TagField(T&& obj, Args&&... args){
+		using MemPtr = typename TagMemPtr<Tag>::type;
+		auto memPtr = MemPtrHolder<Tag, MemPtr>::value;	
+		return obj.*memPtr; 
+	}
 }
 
 
 #define DECLARE_PRIVATE_MEMBER(Tag, MemPtr, memPtr) 				\
 namespace access{								\
-	template class MemPtrHolder<Tag, MemPtr>::template Initializer<memPtr>;	\
+	template class MemPtrHolder<Tag,MemPtr>::template Initializer<memPtr>;	\
 	template<>								\
-	struct TagDispatcher<Tag>{						\
-		template<typename T, typename... Args>				\
-		static decltype(auto) Dispatch(T&& obj, Args&&... args){	\
-			return member::Eval<MemPtr>(std::forward<T>(obj), MemPtrHolder<Tag,MemPtr>::value, std::forward<Args>(args)...); \
-		}								\
+	struct TagMemPtr<Tag>{							\
+		using type = MemPtr;						\
 	};									\
 }

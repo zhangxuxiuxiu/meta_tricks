@@ -19,6 +19,7 @@ namespace access{
 				return memPtr;
 			}
 		};
+		// declare here so that it can be argument(ie TagMember) looked up
 		friend auto TagMemberPtr(TagMember*);
 	};
 
