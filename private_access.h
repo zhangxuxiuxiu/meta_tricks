@@ -21,15 +21,15 @@ namespace access{
 	template<class Tag, class MemPtr, MemPtr memPtr>
 #endif 
 	struct Member{
-		template<class Host, class... Args>
-		friend decltype(auto) tag_mem(typename injector::Inject<Tag, Member>::type*, Host& obj, Args&&... args){
-			return member::Eval<decltype(memPtr)>(obj, memPtr, std::forward<Args>(args)...);
+		friend decltype(auto) TagMemberPtr(typename injector::Inject<Tag, Member>::type*){
+			return memPtr;
 		}
 	};
 
 	template<class Tag, class Host, class... Args>
 	decltype(auto) TagMem(Host& obj, Args&&... args){
-		return tag_mem(static_cast<injector::StateOf<Tag>*>(nullptr), obj, std::forward<Args>(args)... );
+		auto memPtr = TagMemberPtr(static_cast<injector::StateOf<Tag>*>(nullptr));
+		return member::Eval<decltype(memPtr)>(obj, memPtr, std::forward<Args>(args)...);
 	}
 
 // access private fields
