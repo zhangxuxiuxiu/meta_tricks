@@ -28,13 +28,13 @@ struct TagData{};
 
 namespace access{ // required by clang that explicit instantiation must be in ns 
 #if __cplusplus >= 201703L
-	template class TagMember<TagData>::MemberPtr<&Private::data>;
-	template class TagMember<TagSum>::MemberPtr<&Private::sum>;
-	template class TagMember<TagMinus>::MemberPtr<&Private::minus>;
+	template class MemberTag<TagData>::MemberPtr<&Private::data>;
+	template class MemberTag<TagSum>::MemberPtr<&Private::sum>;
+	template class MemberTag<TagMinus>::MemberPtr<&Private::minus>;
 #else 
-	template class TagMember<TagData>::MemberPtr<decltype(&Private::data),&Private::data>;
-	template class TagMember<TagSum>::MemberPtr<decltype(&Private::sum),&Private::sum>;
-	template class TagMember<TagMinus>::MemberPtr<decltype(&Private::minus),&Private::minus>;
+	template class MemberTag<TagData>::MemberPtr<decltype(&Private::data),&Private::data>;
+	template class MemberTag<TagSum>::MemberPtr<decltype(&Private::sum),&Private::sum>;
+	template class MemberTag<TagMinus>::MemberPtr<decltype(&Private::minus),&Private::minus>;
 #endif
 }
 

@@ -1,36 +1,39 @@
 //https://ledas.com/post/857-how-to-hack-c-with-templates-and-friends/
 //https://github.com/dfrib/accessprivate
 //https://dfrib.github.io/a-foliage-of-folly/
+//https://accu.org/journals/overload/28/156/harrison%5F2776/
 
 #pragma once
+
+#include<utility>
 
 namespace access{
 
 	template<class Tag>
-	struct TagMember{
+	struct MemberTag{
 	#if __cplusplus >= 201703L
 		template<auto memPtr>
 	#else
 		template<class MemPtr, MemPtr memPtr>
 	#endif 
 		struct MemberPtr{
-			friend auto TagMemberPtr(TagMember*){
+			friend auto TagMemberPtr(MemberTag*){
 				return memPtr;
 			}
 		};
-		// declare here so that it can be argument(ie TagMember) looked up
-		friend auto TagMemberPtr(TagMember*);
+		// declare here so that it can be argument(ie MemberTag) looked up
+		friend auto TagMemberPtr(MemberTag*);
 	};
 
 	template<class Tag, class Host, class... Args>
 	decltype(auto) TagFunctor(Host& obj, Args&&... args){
-		auto memPtr = TagMemberPtr(static_cast<TagMember<Tag>*>(nullptr));
+		auto memPtr = TagMemberPtr(static_cast<MemberTag<Tag>*>(nullptr));
 		return (obj.*memPtr) (std::forward<Args>(args)...); 
 	}
 
 	template<class Tag, class Host>
 	decltype(auto) TagField(Host& obj){
-		auto memPtr = TagMemberPtr(static_cast<TagMember<Tag>*>(nullptr));
+		auto memPtr = TagMemberPtr(static_cast<MemberTag<Tag>*>(nullptr));
 		return obj.*memPtr; 
 	}
 }

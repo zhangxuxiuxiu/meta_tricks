@@ -1,4 +1,5 @@
 //https://ledas.com/post/857-how-to-hack-c-with-templates-and-friends/
+//https://mc-deltat.github.io/articles/stateful-metaprogramming-cpp20
 
 #pragma once
 

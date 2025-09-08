@@ -1,4 +1,5 @@
 //http://bloglitb.blogspot.com/2010/07/access-to-private-members-thats-easy.html
+//http://bloglitb.blogspot.com/2011/12/access-to-private-members-safer.html
 //https://gist.github.com/altamic/d3778f906b63c6983ef074635eb36c85
 
 #pragma once

@@ -1,3 +1,6 @@
+//https://alexpolt.github.io/type-loophole.html
+//https://github.com/alexpolt/luple
+
 #pragma once
 
 #include <tuple>
