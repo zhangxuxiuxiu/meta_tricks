@@ -6,9 +6,9 @@
 #pragma once
 
 #include <tuple>
+#include <functional>
 #include <utility> //forward
 
-#include "member.h"
 #include "injector.h"
 
 namespace access{
@@ -29,7 +29,7 @@ namespace access{
 	template<class Tag, class Host, class... Args>
 	decltype(auto) TagMem(Host& obj, Args&&... args){
 		auto memPtr = TagMemberPtr(static_cast<injector::StateOf<Tag>*>(nullptr));
-		return member::Eval<decltype(memPtr)>(obj, memPtr, std::forward<Args>(args)...);
+		return std::mem_fn(memPtr)(obj, std::forward<Args>(args)...);
 	}
 
 // access private fields

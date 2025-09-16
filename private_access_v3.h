@@ -6,6 +6,7 @@
 #pragma once
 
 #include<utility>
+#include<functional>
 
 namespace access{
 
@@ -26,14 +27,8 @@ namespace access{
 	};
 
 	template<class Tag, class Host, class... Args>
-	decltype(auto) TagFunctor(Host& obj, Args&&... args){
+	decltype(auto) TagMember(Host& obj, Args&&... args){
 		auto memPtr = TagMemberPtr(static_cast<MemberTag<Tag>*>(nullptr));
-		return (obj.*memPtr) (std::forward<Args>(args)...); 
-	}
-
-	template<class Tag, class Host>
-	decltype(auto) TagField(Host& obj){
-		auto memPtr = TagMemberPtr(static_cast<MemberTag<Tag>*>(nullptr));
-		return obj.*memPtr; 
+		return std::mem_fn(memPtr) (obj, std::forward<Args>(args)...); 
 	}
 }

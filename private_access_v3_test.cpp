@@ -44,11 +44,11 @@ typedef int (Private::*sumFn)() const;
 int main(){
 	Private obj;
 
-	assert( 35 == access::TagFunctor<TagSum>(obj));
-	assert( -1 == access::TagFunctor<TagMinus>(obj, 10));
-	assert( 12 == access::TagField<TagData>(obj));	
-	access::TagField<TagData>(obj) = 99;	
-	assert( 99 == access::TagField<TagData>(obj));	
+	assert( 35 == access::TagMember<TagSum>(obj));
+	assert( -1 == access::TagMember<TagMinus>(obj, 10));
+	assert( 12 == access::TagMember<TagData>(obj));	
+	access::TagMember<TagData>(obj) = 99;	
+	assert( 99 == access::TagMember<TagData>(obj));	
 	
 	return 0;
 }

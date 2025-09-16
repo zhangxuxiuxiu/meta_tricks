@@ -5,6 +5,7 @@
 #pragma once
 
 #include <utility>
+#include <functional>
 
 namespace access{
 	template<class Tag, class MemPtr>
@@ -31,17 +32,10 @@ namespace access{
 	struct TagMemPtr;
 	
 	template<class Tag, class T, class... Args>
-	decltype(auto) TagFunctor(T&& obj, Args&&... args){
+	decltype(auto) TagMember(T&& obj, Args&&... args){
 		using MemPtr = typename TagMemPtr<Tag>::type;
 		auto memPtr = MemPtrHolder<Tag, MemPtr>::value;	
-		return (obj.*memPtr) (std::forward<Args>(args)...); 
-	}
-
-	template<class Tag, class T, class... Args>
-	decltype(auto) TagField(T&& obj, Args&&... args){
-		using MemPtr = typename TagMemPtr<Tag>::type;
-		auto memPtr = MemPtrHolder<Tag, MemPtr>::value;	
-		return obj.*memPtr; 
+		return std::mem_fn(memPtr)(obj, std::forward<Args>(args)...); 
 	}
 }
 
