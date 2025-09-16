@@ -27,7 +27,7 @@ namespace access{
 	};
 
 	template<class Tag, class Host, class... Args>
-	decltype(auto) TagMem(Host& obj, Args&&... args){
+	decltype(auto) TagMember(Host& obj, Args&&... args){
 		auto memPtr = TagMemberPtr(static_cast<injector::StateOf<Tag>*>(nullptr));
 		return std::mem_fn(memPtr)(obj, std::forward<Args>(args)...);
 	}
