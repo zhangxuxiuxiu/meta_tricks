@@ -31,11 +31,11 @@ namespace access{
 	template<class>
 	struct TagMemPtr;
 	
-	template<class Tag, class T, class... Args>
-	decltype(auto) TagMember(T&& obj, Args&&... args){
+	template<class Tag>
+	auto MemFn(){
 		using MemPtr = typename TagMemPtr<Tag>::type;
 		auto memPtr = MemPtrHolder<Tag, MemPtr>::value;	
-		return std::mem_fn(memPtr)(obj, std::forward<Args>(args)...); 
+		return std::mem_fn(memPtr);
 	}
 }
 

@@ -26,10 +26,10 @@ namespace access{
 		}
 	};
 
-	template<class Tag, class Host, class... Args>
-	decltype(auto) TagMember(Host& obj, Args&&... args){
+	template<class Tag>
+	auto MemFn(){
 		auto memPtr = TagMemberPtr(static_cast<injector::StateOf<Tag>*>(nullptr));
-		return std::mem_fn(memPtr)(obj, std::forward<Args>(args)...);
+		return std::mem_fn(memPtr);
 	}
 
 // access private fields

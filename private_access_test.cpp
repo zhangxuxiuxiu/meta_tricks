@@ -48,11 +48,11 @@ int main(){
 	assert( tpl == access::Unpack(obj) );
 	std::cout << std::get<0>(dup) << '\t' << std::get<1>(dup) << '\t' << std::get<2>(dup) << '\n';
 
-	assert( 35 == access::TagMember<TagSum>(obj));
-	assert( -1 == access::TagMember<TagMinus>(obj, 10));
-	assert( 12 == access::TagMember<TagField>(obj));	
-	access::TagMember<TagField>(obj) = 99;	
-	assert( 99 == access::TagMember<TagField>(obj));	
+	assert( 35 == access::MemFn<TagSum>()(obj));
+	assert( -1 == access::MemFn<TagMinus>()(obj, 10));
+	assert( 12 == access::MemFn<TagField>()(obj));	
+	access::MemFn<TagField>()(obj) = 99;	
+	assert( 99 == access::MemFn<TagField>()(obj));	
 	
 	return 0;
 }

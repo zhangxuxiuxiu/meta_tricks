@@ -23,10 +23,10 @@ DECLARE_PRIVATE_MEMBER(Tag2, int A::*, &A::val)
 
 int main() {
 	A a;
-	TagMember<Tag1>(a);
-	TagMember<Tag2>(a) = 4;
+	MemFn<Tag1>()(a);
+	MemFn<Tag2>()(a) = 4;
 	
-	assert( TagMember<Tag2>(a) == 4);
+	assert( MemFn<Tag2>()(a) == 4);
 
-	assert( std::is_lvalue_reference<decltype(TagMember<Tag2>(a) )>::value );
+	assert( std::is_lvalue_reference<decltype(MemFn<Tag2>()(a) )>::value );
 }
